@@ -34,5 +34,4 @@ class Command(BaseCommand):
     help = "Запуск бота"
 
     def handle(self, *args, **options):
-        print(settings.TELEGRAM_TOKEN)
         asyncio.run(start())

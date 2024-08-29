@@ -19,4 +19,8 @@ async def check_command(message: Message, bot: AsyncTeleBot):
         )
         return
     send_data = await SenderData.get_data(date_str)
-    await bot.send_message(message.from_user.id, text=send_data['text'])
+    if send_data.get(date_str, None):
+        text = send_data.get(date_str)
+    else:
+        text = 'На эту дату нет данных'
+    await bot.send_message(chat_id=message.chat.id, text=text)

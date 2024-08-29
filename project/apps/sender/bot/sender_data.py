@@ -4,6 +4,7 @@ from apps.sender.misc.sheet import GoogleSheet
 
 date_format = '%d-%m-%Y'
 
+
 class SenderData:
     @classmethod
     async def get_data(cls, date: str = None, count_days: int = 1) -> dict:
@@ -18,7 +19,7 @@ class SenderData:
         sheet = GoogleSheet.get_file('GrafenDaily')
         result = {}
         for num, row in enumerate(sheet):
-            if num > 0:
+            if num > 0 and row[1] != '':
                 result[row[1]] = {
                     'date': row[1],
                     'text': row[2],
