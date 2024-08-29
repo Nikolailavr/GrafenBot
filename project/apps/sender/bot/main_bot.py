@@ -5,7 +5,8 @@ from django.conf import settings
 from apps.sender.bot.filters.admin import AdminFilter
 from apps.sender.bot.handlers.commands.admin import check_command
 from apps.sender.bot.handlers.commands.user import (
-    send_welcome
+    send_welcome,
+    week_schedule
 )
 
 bot = AsyncTeleBot(
@@ -20,6 +21,9 @@ bot.register_message_handler(
     send_welcome, commands=['start'], pass_bot=True)
 bot.register_message_handler(
     check_command, commands=['check'], pass_bot=True, admin=True)
+bot.register_message_handler(
+    week_schedule, commands=['week'], pass_bot=True)
+
 
 
 # Фильтр для администраторов
