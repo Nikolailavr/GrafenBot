@@ -8,7 +8,7 @@ class SenderData:
     async def get_data(cls, date: str = None) -> dict:
         if date is None:
             date = datetime.now() + timedelta(days=1)
-            date = date.strftime('%Y-%m-%d')
+            date = date.strftime('%d-%m-%Y')
         data = cls.__get_data_from_sheet(date)
         return data
 

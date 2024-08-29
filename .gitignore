@@ -5,6 +5,7 @@
 __pycache__
 db.sqlite3
 media
+.idea/
 
 # Backup files #
 *.bak
@@ -16,7 +17,6 @@ media
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
-.idea/
 
 # AWS User-specific
 .idea/**/aws.xml
