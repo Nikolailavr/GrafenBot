@@ -1,0 +1,16 @@
+services:
+  grafenbot:
+    build: ./project
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./project:/usr/src/app/
+    ports:
+      - 8000:8000
+    environment:
+      - TIME_ZONE=Asia/Tomsk
+      - DEBUG=False
+      - TIME_TO_SEND=12:00
+      - LOG_LEVEL=ERROR
+      - SECRET_KEY=qwe
+      - TELEGRAM_TOKEN=123
+      - TELEGRAM_CHAT_ID=16
