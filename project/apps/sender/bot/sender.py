@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 async def send_reminder():
-    send_data = await SenderData.get_data()
+    send_data = await SenderData.get_data_by_days()
     logger.info(f'{datetime.datetime.now()} - Запуск расписания выполнен')
     if send_data:
         mess = const.TEXT_MESS.format(date=send_data['date'],

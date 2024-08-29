@@ -9,7 +9,7 @@ async def send_welcome(message: Message, bot: AsyncTeleBot):
 
 
 async def week_schedule(message: Message, bot: AsyncTeleBot):
-    send_data = await SenderData.get_data(count_days=5)
+    send_data = await SenderData.get_data_by_days(count_days=5)
     if send_data:
         mess = 'График на ближайшие 5 дней:'
         for date, value in send_data.items():
@@ -22,11 +22,10 @@ async def week_schedule(message: Message, bot: AsyncTeleBot):
 
 async def children_schedule(message: Message, bot: AsyncTeleBot):
     telegram_id = message.text.split(' ', 1)[1]
-    send_data = await SenderData.get_data()
+    send_data = await SenderData.get_data_by_child(telegram_id)
     if send_data:
         mess = 'Ваш график на учебный год:'
         for date, value in send_data.items():
-            if value.get('telegram_id') == telegram_id:
-                mess += f'\n{value["date"] - value["text"]}'
+            mess += f'\n{value["date"]} - {value["text"]}'
         await bot.send_message(chat_id=message.chat.id,
                                text=mess)

@@ -18,7 +18,7 @@ async def check_command(message: Message, bot: AsyncTeleBot):
             f"Некорректный формат даты {date_str}. Используйте DD-MM-YYYY."
         )
         return
-    send_data = await SenderData.get_data(date_str)
+    send_data = await SenderData.get_data_by_days(date_str)
     if send_data.get(date_str, None):
         text = send_data.get(date_str)
     else:
