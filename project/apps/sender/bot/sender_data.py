@@ -19,6 +19,7 @@ class SenderData:
         for num, row in enumerate(sheet):
             if num > 0:
                 result[row[1]] = {
+                    'date': row[1],
                     'text': row[2],
                     'telegram_id': row[3]
                 }
