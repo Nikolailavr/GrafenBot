@@ -16,7 +16,6 @@ class SenderData:
 
     @classmethod
     async def get_data_by_child(cls, telegram_id: str) -> dict:
-        date = datetime.now().strftime(date_format)
         sheet = cls.__get_data_from_sheet()
         result = {}
         for date, values in sheet.items():
@@ -34,7 +33,10 @@ class SenderData:
                 result[row[1]] = {
                     'date': row[1],
                     'text': row[2],
-                    'telegram_id': row[3]
+                    'telegram_id': row[3],
+                    'telegram_id2': row[4],
+                    'event': row[5],
+                    'name': row[6],
                 }
         return result
 

@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from apps.sender.bot.main_bot import bot
-from apps.sender.bot.sender import send_reminder
+from apps.sender.bot.sender import check_mess
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def schedule_run():
     logger.info(f"{datetime.datetime.now()} | INFO - Schedule start")
     (schedule.every().day
      .at(settings.TIME_TO_SEND, settings.TIME_ZONE)
-     .do(lambda: asyncio.create_task(send_reminder()))
+     .do(lambda: asyncio.create_task(check_mess()))
      )
     while True:
         schedule.run_pending()
