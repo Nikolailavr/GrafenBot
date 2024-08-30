@@ -4,6 +4,8 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
 
 from apps.sender.bot.sender_data import SenderData
+from apps.sender.misc import const
+from core import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,3 +26,8 @@ async def check_command(message: Message, bot: AsyncTeleBot):
     else:
         text = 'На эту дату нет данных'
     await bot.send_message(chat_id=message.chat.id, text=text)
+
+
+async def test_command(message: Message, bot: AsyncTeleBot):
+    await bot.send_message(chat_id=settings.TELEGRAM_CHAT_ID,
+                           text=const.TEXT_WELCOME)

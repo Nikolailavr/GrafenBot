@@ -3,7 +3,7 @@ from telebot.async_telebot import AsyncTeleBot
 from django.conf import settings
 
 from apps.sender.bot.filters.admin import AdminFilter
-from apps.sender.bot.handlers.commands.admin import check_command
+from apps.sender.bot.handlers.commands.admin import check_command, test_command
 from apps.sender.bot.handlers.commands.user import (
     send_welcome,
     week_schedule,
@@ -21,12 +21,14 @@ telebot.logger.setLevel(settings.LOG_LEVEL)
 bot.register_message_handler(
     send_welcome, commands=['start'], pass_bot=True)
 bot.register_message_handler(
-    check_command, commands=['check'], pass_bot=True, admin=True)
-bot.register_message_handler(
     week_schedule, commands=['week'], pass_bot=True)
 bot.register_message_handler(
     children_schedule, commands=['my_schedule'], pass_bot=True)
 
+bot.register_message_handler(
+    check_command, commands=['check'], pass_bot=True, admin=True)
+bot.register_message_handler(
+    test_command, commands=['test'], pass_bot=True, admin=True)
 
 # Фильтр для администраторов
 bot.add_custom_filter(AdminFilter())
