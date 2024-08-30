@@ -11,7 +11,7 @@ async def send_welcome(message: Message, bot: AsyncTeleBot):
 
 
 async def week_schedule(message: Message, bot: AsyncTeleBot):
-    send_data = await SenderData.get_data_by_days(count_days=5)
+    send_data = await SenderData.get_for_days(count_days=5)
     if send_data:
         mess = 'График на ближайшие 5 дней:'
         for date, value in send_data.items():
@@ -27,7 +27,7 @@ async def children_schedule(message: Message, bot: AsyncTeleBot):
     telegram_id = message.from_user.username
     first_name = message.from_user.first_name
     if telegram_id != '':
-        send_data = await SenderData.get_data_by_child(telegram_id)
+        send_data = await SenderData.get_by_child(telegram_id)
         if send_data:
             mess = f'Уважаемый {first_name}!\n' if first_name else ''
             mess += 'Ваш график на учебный год:'

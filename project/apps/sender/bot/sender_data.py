@@ -7,29 +7,26 @@ date_format = '%d-%m-%Y'
 
 class SenderData:
     @classmethod
-    async def get_data_by_days(cls, date: str = None, count_days: int = 1) -> dict:
-        if date is None:
-            date = datetime.now() + timedelta(days=1)
-            date = date.strftime(date_format)
-        sheet = cls.__get_data_from_sheet()
-        return cls.__modify_data(sheet, date, count_days=count_days)
+    async def get_all_schedule(cls) -> dict:
+        return cls.__get_data_from_sheet()
 
     @classmethod
-    async def get_data_by_child(cls, telegram_id: str) -> dict:
+    async def get_by_child(cls, telegram_id: str) -> dict:
         sheet = cls.__get_data_from_sheet()
         result = {}
         for date, values in sheet.items():
             if temp := sheet.get(date):
-                if telegram_id == temp.get('telegram_id', None):
+                if (telegram_id == temp.get('telegram_id', None) or
+                        telegram_id == temp.get('telegram_id2', None)):
                     result[date] = temp
         return result
 
     @classmethod
-    def __get_data_from_sheet(cls):
+    def __get_data_from_sheet(cls) -> dict:
         sheet = GoogleSheet.get_file('GrafenDaily')
         result = {}
         for num, row in enumerate(sheet):
-            if num > 0 and row[1] != '':
+            if num > 0 and row[0] != '':
                 result[row[1]] = {
                     'date': row[1],
                     'text': row[2],
@@ -40,15 +37,18 @@ class SenderData:
                 }
         return result
 
-    @staticmethod
-    def __modify_data(sheet: dict, date: str, count_days: int = 1):
+    @classmethod
+    async def get_for_days(cls, count_days: int = 5) -> dict:
+        date = datetime.now().strftime(date_format)
+        sheet = cls.__get_data_from_sheet()
         result = {}
         while count_days > 0:
             if temp := sheet.get(date):
-                result[date] = temp
-                count_days -= 1
+                if temp.get("text", None):
+                    result[date] = temp
+                    count_days -= 1
             date = datetime.strptime(date, date_format) + timedelta(days=1)
+            if date > datetime.strptime("31-05-2025", date_format):
+                break
             date = date.strftime(date_format)
         return result
-
-
