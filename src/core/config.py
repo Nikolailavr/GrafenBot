@@ -36,8 +36,8 @@ class Telegram(BaseModel):
     bot_username: str = "GrafenTmskBot"
 
 class Schedule(BaseModel):
-    time_zone: str = "Asia/Tomsk"
-    time_to_send: str = "11:00"
+    time_zone: str
+    time_to_send: str
 
 
 class Settings(BaseSettings):
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     )
     logging: LoggingConfig = LoggingConfig()
     telegram: Telegram
-    time: Schedule = Schedule()
+    schedule: Schedule
 
 
 settings = Settings()

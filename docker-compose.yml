@@ -1,5 +1,6 @@
 services:
   grafenbot:
+    container_name: grafenbot
     build:
       dockerfile: ./docker-build/Dockerfile
       context: .
