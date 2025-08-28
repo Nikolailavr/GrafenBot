@@ -1,7 +1,9 @@
 from aiogram import Dispatcher
 
-from apps.sender.bot.handlers.commands.user import register_users_handlers
-from apps.sender.bot.handlers.commands.admin import register_admin_handlers
+from apps.sender.bot.handlers.commands import (
+    register_users_handlers,
+    register_admin_handlers,
+)
 
 
 def register_all_handlers(dp: Dispatcher) -> None:

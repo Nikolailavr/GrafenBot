@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-from aiogram import Router
+from aiogram import Router, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -35,3 +35,7 @@ async def check_command(message: Message):
 async def test_command(message: Message):
     await bot.send_message(chat_id=settings.telegram.admin_chat_id,
                            text=const.TEXT_WELCOME)
+
+
+def register_admin_handlers(dp: Dispatcher) -> None:
+    dp.include_router(router)

@@ -4,7 +4,7 @@ import logging
 
 import schedule
 
-from apps.sender.bot.main_bot import bot
+from apps.sender.bot.main_bot import bot, start_bot
 from apps.sender.bot.sender import check_mess
 from core.config import settings
 
@@ -25,7 +25,7 @@ async def schedule_run():
 async def start():
     await asyncio.gather(
         schedule_run(),
-        bot.infinity_polling(logger_level=logging.DEBUG)
+        start_bot(),
     )
 
 

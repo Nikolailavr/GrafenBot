@@ -5,9 +5,10 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from apps.sender.bot.sender_data import SenderData
+from apps.sender.google_client import GoogleClient
 from apps.sender.misc import const
 
-from core.config import settings, bot
+from core.config import bot
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -32,22 +33,36 @@ async def week_schedule(message: Message):
 
 @router.message(Command("my_schedule"))
 async def children_schedule(message: Message):
-    mess = 'К сожалению, нет данных'
-    telegram_id = message.from_user.username
+    username = message.from_user.username
     first_name = message.from_user.first_name
-    if telegram_id != '':
-        send_data = await SenderData.get_by_child(telegram_id)
-        if send_data:
-            mess = f'Уважаемый {first_name}!\n' if first_name else ''
-            mess += 'Ваш график на учебный год:'
-            for date, value in send_data.items():
-                mess += f'\n{value["date"]} - {value["text"]}'
-        else:
-            mess += f' для @{telegram_id}'
-    else:
-        mess = 'К сожалению, не смог найти ваше имя пользователя (username) в telegram'
-    await bot.send_message(chat_id=message.chat.id,
-                           text=mess)
+
+    if not username:
+        await bot.send_message(message.chat.id,
+                               "К сожалению, не смог найти ваше имя пользователя (username) в telegram")
+        return
+
+    # 1. Получаем номер класса
+    gclient = GoogleClient()
+    class_num = gclient.get_user_class(username)
+    if not class_num:
+        await bot.send_message(message.chat.id,
+                               f"Не нашёл данных или класс не указан для @{username}")
+        return
+
+    # 2. Получаем расписание
+    schedule_data = gclient.get_schedule_by_class(class_num)
+    if not schedule_data:
+        await bot.send_message(message.chat.id,
+                               f"Не найдено расписания для Class_{class_num}")
+        return
+
+    # 3. Формируем сообщение
+    mess = f'Уважаемый {first_name}!\n' if first_name else ''
+    mess += f'Ваш график на учебный год (Class {class_num}):'
+    for row in schedule_data:
+        mess += f'\n{row["date"]} - {row["text"]}'
+
+    await bot.send_message(chat_id=message.chat.id, text=mess)
 
 
 def register_users_handlers(dp: Dispatcher) -> None:
