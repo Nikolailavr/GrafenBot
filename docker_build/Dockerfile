@@ -1,17 +1,18 @@
-# pull official base image
-FROM python:3.11.7-alpine
+FROM python:3.13.3-slim-bookworm
 
-# set work directory
-WORKDIR /usr/src/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+WORKDIR /src
 
-# install dependencies
-RUN pip install --upgrade pip
-COPY ./requirements.txt /usr/src/app/requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip wheel "poetry==2.1" setuptools
 
-# copy project
-COPY . /usr/src/app/
+RUN poetry config virtualenvs.create false
+
+COPY pyproject.toml poetry.lock ./
+
+RUN poetry install --no-root
+
+COPY /src .
+
+CMD ["python3", "./run_bot.py"]

@@ -4,7 +4,7 @@ import logging
 
 import schedule
 
-from apps.sender.bot.main_bot import bot, start_bot
+from apps.sender.bot.main_bot import start_bot
 from apps.sender.bot.sender import check_mess
 from core.config import settings
 
@@ -29,3 +29,10 @@ async def start():
     )
 
 
+def main():
+    logger.info("Запускаем бота с расписанием")
+    asyncio.run(start())
+
+
+if __name__ == "__main__":
+    main()
