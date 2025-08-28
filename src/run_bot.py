@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 async def schedule_run():
     logger.info(f"{datetime.datetime.now()} | INFO - Schedule start")
     (schedule.every().day
-     .at(settings.time.time_to_sent, settings.time.time_zone)
+     .at(settings.time.time_to_send, settings.time.time_zone)
      .do(lambda: asyncio.create_task(check_mess()))
      )
     while True:
