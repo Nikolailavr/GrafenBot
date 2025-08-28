@@ -45,7 +45,7 @@ class GoogleClient:
 
         return ws_class.get_all_records()
 
-    def get_for_days(self, class_schedule: list[dict], count_days: int = 5) -> dict:
+    def get_for_days(self, class_num: str, count_days: int = 5) -> dict:
         """
         Возвращает расписание на count_days вперед начиная с сегодняшнего дня.
         class_schedule — это результат get_schedule_by_class(class_num)
@@ -53,6 +53,8 @@ class GoogleClient:
         result = {}
         today = datetime.now().strftime(date_format)
         date = today
+
+        class_schedule = self.get_schedule_by_class(class_num)
 
         while count_days > 0:
             # ищем по текущей дате
