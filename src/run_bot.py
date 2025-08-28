@@ -3,11 +3,10 @@ import datetime
 import logging
 
 import schedule
-from django.conf import settings
-from django.core.management.base import BaseCommand
 
 from apps.sender.bot.main_bot import bot
 from apps.sender.bot.sender import check_mess
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 async def schedule_run():
     logger.info(f"{datetime.datetime.now()} | INFO - Schedule start")
     (schedule.every().day
-     .at(settings.TIME_TO_SEND, settings.TIME_ZONE)
+     .at(settings.time.time_to_sent, settings.time.time_zone)
      .do(lambda: asyncio.create_task(check_mess()))
      )
     while True:
@@ -30,8 +29,3 @@ async def start():
     )
 
 
-class Command(BaseCommand):
-    help = "Запуск бота"
-
-    def handle(self, *args, **options):
-        asyncio.run(start())

@@ -1,28 +1,37 @@
-from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+import logging
+
+from aiogram import Router, Dispatcher
+from aiogram.filters import Command
+from aiogram.types import Message
 
 from apps.sender.bot.sender_data import SenderData
 from apps.sender.misc import const
 
+from core.config import settings, bot
 
-async def send_welcome(message: Message, bot: AsyncTeleBot):
+logger = logging.getLogger(__name__)
+router = Router()
+
+
+@router.message(Command("start"))
+async def send_welcome(message: Message):
     await bot.send_message(chat_id=message.chat.id,
                            text=const.TEXT_WELCOME)
 
 
-async def week_schedule(message: Message, bot: AsyncTeleBot):
+@router.message(Command("week"))
+async def week_schedule(message: Message):
     send_data = await SenderData.get_for_days(count_days=5)
     if send_data:
         mess = 'График на ближайшие 5 дней:'
         for date, value in send_data.items():
             mess += f'\n{date} - {value["text"]}'
-            # if value["telegram_id"]:
-            #     mess += f' (@{value["telegram_id"]})'
         await bot.send_message(chat_id=message.chat.id,
                                text=mess)
 
 
-async def children_schedule(message: Message, bot: AsyncTeleBot):
+@router.message(Command("my_schedule"))
+async def children_schedule(message: Message):
     mess = 'К сожалению, нет данных'
     telegram_id = message.from_user.username
     first_name = message.from_user.first_name
@@ -39,3 +48,7 @@ async def children_schedule(message: Message, bot: AsyncTeleBot):
         mess = 'К сожалению, не смог найти ваше имя пользователя (username) в telegram'
     await bot.send_message(chat_id=message.chat.id,
                            text=mess)
+
+
+def register_users_handlers(dp: Dispatcher) -> None:
+    dp.include_router(router)

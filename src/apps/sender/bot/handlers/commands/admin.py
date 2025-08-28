@@ -1,16 +1,19 @@
 from datetime import datetime
 import logging
-from telebot.async_telebot import AsyncTeleBot
-from telebot.types import Message
+
+from aiogram import Router
+from aiogram.filters import Command
+from aiogram.types import Message
 
 from apps.sender.bot.sender_data import SenderData
 from apps.sender.misc import const
-from core import settings
+from core.config import settings, bot
 
 logger = logging.getLogger(__name__)
+router = Router()
 
-
-async def check_command(message: Message, bot: AsyncTeleBot):
+@router.message(Command("check"))
+async def check_command(message: Message):
     date_str = message.text.split(' ', 1)[1]
     try:
         check_date = datetime.strptime(date_str, "%d-%m-%Y")
@@ -28,6 +31,7 @@ async def check_command(message: Message, bot: AsyncTeleBot):
     await bot.send_message(chat_id=message.chat.id, text=text)
 
 
-async def test_command(message: Message, bot: AsyncTeleBot):
-    await bot.send_message(chat_id=settings.TELEGRAM_CHAT_ID,
+@router.message(Command("test"))
+async def test_command(message: Message):
+    await bot.send_message(chat_id=settings.telegram.admin_chat_id,
                            text=const.TEXT_WELCOME)
