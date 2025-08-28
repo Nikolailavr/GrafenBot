@@ -56,6 +56,13 @@ class GoogleClient:
 
         class_schedule = self.get_schedule_by_class(class_num)
 
+        # находим максимальную дату в расписании
+        all_dates = [
+            datetime.strptime(row["date"], date_format)
+            for row in class_schedule if row.get("date")
+        ]
+        max_date = max(all_dates) if all_dates else datetime.now()
+
         while count_days > 0:
             # ищем по текущей дате
             temp = next((row for row in class_schedule if row.get("date") == date), None)
@@ -65,7 +72,7 @@ class GoogleClient:
 
             # переходим на следующий день
             date = datetime.strptime(date, date_format) + timedelta(days=1)
-            if date > datetime.strptime("31-05-2025", date_format):
+            if date > max_date:
                 break
             date = date.strftime(date_format)
 
