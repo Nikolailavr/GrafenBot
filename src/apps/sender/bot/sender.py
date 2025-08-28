@@ -4,10 +4,10 @@ import logging
 import random
 
 from apps.sender.bot.main_bot import bot
-from apps.sender.bot.sender_data import SenderData
+from apps.sender.google_client import GoogleClient
 from apps.sender.misc import const
 
-from core import settings
+from core.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -15,34 +15,47 @@ date_format = '%d-%m-%Y'
 
 
 async def check_mess():
-    schedule = await SenderData.get_all_schedule()
-    await send_birthday(schedule)
-    await send_reminder(schedule)
+    await send_reminder_for_class("0")
+    await send_reminder_for_class("2")
 
 
-async def send_reminder(schedule: dict):
-    logger.info(f'{datetime.datetime.now()} - Запуск расписания выполнен')
-    date = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime(date_format)
-    if data := schedule.get(date, dict()):
-        if data.get('text'):
-            telegram_id = '🍕 '
-            if data['telegram_id']:
-                telegram_id += f'@{data["telegram_id"]}'
-            if data['telegram_id2']:
-                telegram_id += f', @{data["telegram_id2"]}'
-            mess = const.TEXT_MESS.format(date=data['date'],
-                                          text=data['text'],
-                                          telegram_id=telegram_id)
-            await bot.send_message(chat_id=settings.TELEGRAM_CHAT_ID,
-                                   text=mess)
+async def send_reminder_for_class(class_num: str):
+    """
+    Отправка напоминания по расписанию на следующий день для конкретного класса
+    """
+    gclient = GoogleClient()
 
+    # 1. Получаем расписание класса
+    schedule = gclient.get_schedule_by_class(class_num)
+    if not schedule:
+        logger.warning(f"Расписание для Class_{class_num} не найдено")
+        return
 
-async def send_birthday(schedule: dict):
-    datenow = datetime.datetime.now().strftime(date_format)
-    if data := schedule.get(datenow, dict()):
-        if data.get('event', None):
-            num = random.randint(0, 9)
-            mess = const.BIRTHDAY[num].format(name=data.get('name', ''))
-            await bot.send_message(chat_id=settings.TELEGRAM_CHAT_ID,
-                                   text=mess)
-            await asyncio.sleep(30)
+    # 2. Берем расписание на следующий день
+    next_day = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime(date_format)
+    schedule_map = {row["date"]: row for row in schedule if row.get("date")}
+
+    if data := schedule_map.get(next_day):
+        if not data.get("text"):
+            return
+
+        # 3. Формируем список telegram_id
+        telegram_id = "🍕 "
+        if data.get("telegram_id"):
+            telegram_id += f'@{data["telegram_id"]}'
+        if data.get("telegram_id2"):
+            telegram_id += f', @{data["telegram_id2"]}'
+
+        # 4. Формируем сообщение
+        mess = const.TEXT_MESS.format(
+            date=data["date"],
+            text=data["text"],
+            telegram_id=telegram_id
+        )
+
+        # 5. Отправляем в чат
+        await bot.send_message(chat_id=settings.TELEGRAM_CHAT_ID, text=mess)
+        logger.info(f"{datetime.datetime.now()} - Отправлено сообщение для Class_{class_num} на {next_day}")
+    else:
+        logger.info(f"{datetime.datetime.now()} - Нет данных на {next_day} для Class_{class_num}")
+

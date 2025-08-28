@@ -3,7 +3,7 @@ import logging
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apps.sender.bot.handlers import register_all_handlers
-from src.core.config import bot
+from core.config import bot
 
 logger = logging.getLogger(__name__)
 
