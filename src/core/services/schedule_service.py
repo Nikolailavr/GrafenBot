@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from multiprocessing.connection import families
 from typing import Optional, List, Dict
 
+from aiogram.types import Message
 from sqlalchemy import select
 
 from core.database.DAL.schedules_CRUD import ScheduleCRUD
@@ -58,16 +59,37 @@ class ScheduleService:
             return await crud.list(child_id=child_id, class_num=class_num)
 
     @staticmethod
-    async def get_by_parents(username: str) -> list[Schedule]:
-        """Найти расписание по username родителей"""
-        async with db_helper.get_session() as session:
-            result = await session.execute(
-                select(Schedule)
-                .join(Family, Schedule.child_id == Family.id)
-                .where((Family.mother == username) | (Family.father == username))
-                .order_by(Schedule.date)
-            )
-            return result.scalars().all()
+    async def get_by_parents(username: str) -> dict[int, list[ScheduleWithFamily]]:
+        """Найти все расписания по username родителей, сгруппированные по class_num"""
+        families = await FamilyService.list_families()
+
+        # 1. Получаем семьи пользователя
+        user_families = [f for f in families if username in (f.mother, f.father)]
+        if not user_families:
+            return {}
+
+        # 2. Собираем классы
+        class_nums = list({f.class_num for f in user_families})
+        schedules: dict[int, list[ScheduleWithFamily]] = {}
+
+        # 3. Ищем расписания для всех классов
+        for class_num in class_nums:
+            class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+            for s in class_schedules:
+                # находим ребёнка для записи
+                child = next((f for f in user_families if f.id == s.child_id), None)
+                if child:
+                    schedules.setdefault(class_num, []).append(
+                        ScheduleWithFamily(
+                            id=s.id,
+                            date=s.date,
+                            child=child.child,
+                            class_num=child.class_num,
+                            mother=child.mother,
+                            father=child.father,
+                        )
+                    )
+        return schedules
 
     @staticmethod
     async def get_tomorrow(username: str) -> list[Schedule]:
@@ -87,10 +109,10 @@ class ScheduleService:
             return result.scalars().all()
 
     @staticmethod
-    async def get_week(username: str, days: int = 5) -> Dict[int, List[ScheduleWithFamily]]:
+    async def get_week(days: int = 5) -> Dict[int, List[ScheduleWithFamily]] | None:
         families = await FamilyService.list_families()
         if not families:
-            return []
+            return None
 
         class_nums = list({f.class_num for f in families})
         today_str = datetime.today().strftime(date_format)
@@ -119,5 +141,4 @@ class ScheduleService:
                             father=child.father,
                         )
                     )
-
         return schedules

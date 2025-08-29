@@ -4,6 +4,7 @@ from aiogram import Router, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from apps.sender.bot.sent_msg import SentMessage
 from apps.sender.misc import const
 
 from core.config import bot
@@ -20,43 +21,23 @@ async def send_welcome(message: Message):
 
 @router.message(Command("week"))
 async def week_schedule(message: Message):
-    service = ScheduleService()
-    schedules = await service.get_week(username=message.from_user.username, days=5)
-
-    if not schedules:
-        await message.answer("Нет расписания на ближайшие дни.")
-        return
-
-    mess = f"График на ближайшие 5 дней:"
-    for class_num, s in schedules.items():
-        mess += f"\n\nКласс {class_num}"
-        for item in s:
-            mess += f"\n📅 {item.date} — {item.child}"
-
-    await message.answer(mess)
+    schedules = await ScheduleService.get_week(days=5)
+    await SentMessage.msg_week(schedules, message.chat.id)
 
 
 @router.message(Command("my_schedule"))
 async def children_schedule(message: Message):
     username = message.from_user.username
-    first_name = message.from_user.first_name or ""
-
-    schedules = await ScheduleService.get_week(username, days=5)
-
-    if not schedules:
-        await message.answer("У вас нет зарегистрированного расписания.")
+    if not username:
+        await message.answer("Не найден username в Telegram")
         return
 
-    mess = f"Уважаемый {first_name}!\nВаш график на ближайшую неделю:"
-
-    current_date = None
-    for s in schedules:
-        if s.date != current_date:  # группировка по датам
-            mess += f"\n\n📅 {s.date}:"
-            current_date = s.date
-        mess += f"\n— {s.text or ''}"
-
-    await message.answer(mess)
+    # 1. Берём все расписания для данного родителя
+    schedules = await ScheduleService.get_by_parents(username)
+    if not schedules:
+        await message.answer("У вас нет зарегистрированных детей с расписанием.")
+        return
+    await SentMessage.msg_schedule(schedules, message.chat.id)
 
 
 def register_users_handlers(dp: Dispatcher) -> None:
