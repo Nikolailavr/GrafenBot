@@ -4,28 +4,13 @@ from aiogram import Router, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from apps.sender.google_client import GoogleClient
 from apps.sender.misc import const
 
 from core.config import bot
-from core.services import ScheduleService, FamilyService
+from core.services import ScheduleService
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-
-async def get_user_classes(message: Message) -> list[str] | None:
-    username = message.from_user.username
-    if not username:
-        await bot.send_message(message.chat.id, "Не найден username в Telegram")
-        return None
-
-    classes = GoogleClient().get_user_classes(username)
-    if not classes:
-        await bot.send_message(message.chat.id, f"Не найдено классов для @{username}")
-        return None
-
-    return classes
 
 
 @router.message(Command("start"))
