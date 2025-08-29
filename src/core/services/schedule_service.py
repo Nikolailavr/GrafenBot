@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from multiprocessing.connection import families
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -15,6 +16,8 @@ from core.database.schemas import (
     ScheduleWithFamily,
 )
 from core.services import FamilyService
+
+date_format = "%Y-%m-%d"
 
 
 class ScheduleService:
@@ -69,7 +72,7 @@ class ScheduleService:
     @staticmethod
     async def get_tomorrow(username: str) -> list[Schedule]:
         """Расписание на завтра"""
-        tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+        tomorrow = (datetime.today() + timedelta(days=1)).strftime(date_format)
 
         async with db_helper.get_session() as session:
             result = await session.execute(
@@ -86,11 +89,10 @@ class ScheduleService:
     @staticmethod
     async def get_week(username: str, days: int = 5) -> list[ScheduleWithFamily]:
 
+        families = await FamilyService.list_families()
         # 1. Получаем всех детей пользователя через FamilyService
         user_families = [
-            family
-            for family in await FamilyService.list_families()
-            if username in (family.mother, family.father)
+            family for family in families if username in (family.mother, family.father)
         ]
         if not user_families:
             return []
@@ -101,7 +103,8 @@ class ScheduleService:
         # 3. Список ближайших дней
         today_dt = datetime.today()
         selected_dates = [
-            (today_dt + timedelta(days=i)).strftime("%d-%m-%Y") for i in range(days * 2)
+            (today_dt + timedelta(days=i)).strftime(date_format)
+            for i in range(days * 2)
         ]
 
         # 4. Сбор всех записей по классам и выбранным датам через ScheduleService
@@ -111,7 +114,7 @@ class ScheduleService:
             for s in class_schedules:
                 if s.date in selected_dates:
                     # находим child info
-                    child = next((f for f in user_families if f.id == s.child_id), None)
+                    child = next((f for f in families if f.id == s.child_id), None)
                     if child:
                         schedules.append(
                             ScheduleWithFamily(
@@ -125,5 +128,5 @@ class ScheduleService:
                         )
 
         # 5. сортируем по дате
-        schedules.sort(key=lambda x: datetime.strptime(x.date, "%d-%m-%Y"))
+        schedules.sort(key=lambda x: datetime.strptime(x.date, date_format))
         return schedules[:days]
