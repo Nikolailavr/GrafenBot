@@ -105,13 +105,13 @@ class ScheduleService:
                 child = next((f for f in families if f.id == s.child_id), None)
                 if child:
                     return ScheduleWithFamily(
-                            id=s.id,
-                            date=s.date,
-                            child=child.child,
-                            class_num=child.class_num,
-                            mother=child.mother,
-                            father=child.father,
-                        )
+                        id=s.id,
+                        date=s.date,
+                        child=child.child,
+                        class_num=child.class_num,
+                        mother=child.mother,
+                        father=child.father,
+                    )
         return None
 
     @staticmethod

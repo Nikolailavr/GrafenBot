@@ -25,6 +25,7 @@ async def __sync(message: Message):
         text="Sync completed!",
     )
 
+
 @router.message(Command("tomorrow"))
 async def __tomorrow(message: Message):
     if message.from_user.id != settings.telegram.admin_chat_id:
