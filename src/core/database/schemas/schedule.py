@@ -10,8 +10,8 @@ class ScheduleBase(BaseModel):
     telegram_id: Optional[str] = None
     telegram_id2: Optional[str] = None
 
-class ScheduleCreate(ScheduleBase):
-    ...
+
+class ScheduleCreate(ScheduleBase): ...
 
 
 class ScheduleRead(ScheduleBase):

@@ -1,7 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
-from core.database.schemas.schedule import ScheduleRead
+from core.database.schemas import ScheduleRead
 
 
 class FamilyBase(BaseModel):
