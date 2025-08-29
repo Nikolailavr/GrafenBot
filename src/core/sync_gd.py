@@ -36,7 +36,7 @@ class GoogleClient:
             # Создаём или обновляем через сервис
             existing = await ClassService.get_class(class_in.num)
             if existing:
-                await ClassService.update_class(class_in.num, class_in)
+                await ClassService.update_class(class_in)
             else:
                 await ClassService.create_class(class_in)
 

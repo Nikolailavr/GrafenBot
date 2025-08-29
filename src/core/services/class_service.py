@@ -21,10 +21,10 @@ class ClassService:
             return await crud.get(num)
 
     @staticmethod
-    async def update_class(num: int, class_in: ClassCreate) -> Optional[ClassRead]:
+    async def update_class(class_in: ClassCreate) -> Optional[ClassRead]:
         async with db_helper.get_session() as session:
             crud = ClassCRUD(session)
-            return await crud.update(num, class_in)
+            return await crud.update(class_in)
 
     @staticmethod
     async def delete_class(num: int) -> bool:
