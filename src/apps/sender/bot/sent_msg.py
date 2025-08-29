@@ -2,7 +2,13 @@ from datetime import datetime
 
 from core.config import bot
 
-date_format = "%Y-%m-%d"
+date_format_db = "%Y-%m-%d"
+date_format = "%d-%m-%Y"
+
+
+def _convert_date(date: str) -> str:
+    converted_date = datetime.strptime(date, date_format_db)
+    return converted_date.strftime(date_format)
 
 
 class SentMessage:
@@ -19,7 +25,7 @@ class SentMessage:
         for class_num, s in schedules.items():
             mess += f"\n\nКласс {class_num}"
             for item in s:
-                mess += f"\n📅 {item.date} — {item.child}"
+                mess += f"\n📅 {_convert_date(item.date)} — {item.child}"
 
         await bot.send_message(
             chat_id=chat_id,
@@ -40,7 +46,7 @@ class SentMessage:
         for class_num, schedule in schedules.items():
             mess += f"\n\nКласс {class_num}:"
             for item in schedule:
-                mess += f"\n📅 {item.date} — {item.child}"
+                mess += f"\n📅 {_convert_date(item.date)} — {item.child}"
 
         await bot.send_message(
             chat_id=chat_id,
