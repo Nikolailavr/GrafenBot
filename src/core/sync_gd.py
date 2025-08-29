@@ -81,6 +81,7 @@ class GoogleClient:
             for row in schedule_rows:
                 date = row.get("date")
                 date = datetime.datetime.strptime(date, date_format)
+                date = date.strftime("%Y-%m-%d")
                 if not date:
                     continue
 
@@ -88,17 +89,22 @@ class GoogleClient:
                 family = await FamilyService.get_family(child=child)
 
                 schedule_in = ScheduleCreate(
-                    date=date.strftime("%Y-%m-%d"),
+                    date=date,
                     child_id=family.id,
                     class_num=family.class_num,
                 )
 
                 # Сохраняем через сервис
                 existing_schedule = await ScheduleService.list_schedules(
-                    child_id=family.id
+                    class_num=family.class_num
                 )
                 exists_for_date = next(
-                    (s for s in existing_schedule if s.date == date), None
+                    (
+                        s
+                        for s in existing_schedule
+                        if s.date == date and s.class_num == family.class_num
+                    ),
+                    None,
                 )
                 if exists_for_date:
                     await ScheduleService.update_schedule(
