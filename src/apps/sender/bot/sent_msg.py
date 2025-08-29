@@ -4,6 +4,7 @@ from core.config import bot
 
 date_format = "%Y-%m-%d"
 
+
 class SentMessage:
     @staticmethod
     async def msg_week(schedules: dict, chat_id: int):
@@ -36,10 +37,10 @@ class SentMessage:
 
         mess = f"Уважаемый {first_name}!\nВаш график на учебный год:"
 
-        for class_num, items in schedules.items():
+        for class_num, schedule in schedules.items():
             mess += f"\n\nКласс {class_num}:"
-            for s, child in sorted(items, key=lambda x: datetime.strptime(x[0].date, date_format)):
-                mess += f"\n📅 {s.date} — {s.text or ''} ({child.child})"
+            for item in schedule:
+                mess += f"\n📅 {item.date} — {item.child}"
 
         await bot.send_message(
             chat_id=chat_id,
