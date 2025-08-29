@@ -1,90 +1,129 @@
 import asyncio
-from apps.sender.google_client import GoogleClient
-from sqlalchemy import select
+import logging
 
-from core.database.db import async_session_maker
-from core.database.models.models import Class, User, Schedule
+from sqlalchemy import select, delete
 
-gclient = GoogleClient()
+from core.database.db_helper import db_helper
+from core.database.models import Class, Family, Schedule
+from core.database.schemas import ClassCreate, FamilyCreate, ScheduleCreate
+
+import gspread
+
+from core.config import BASE_DIR
+
+CREDS = BASE_DIR / "creds.json"
+date_format = "%d-%m-%Y"
+logger = logging.getLogger(__name__)
 
 
-async def sync_google_to_db():
-    """
-    Синхронизирует Google Sheets с базой данных.
-    - Берет лист Family → users и классы
-    - Берет листы Class_X → расписание
-    """
-    async with async_session_maker() as session:
-        # 1. Синк классов и пользователей
-        family_data = gclient.sh.worksheet("Family").get_all_records()
-        for row in family_data:
-            class_name = str(row.get("class")).strip()
-            if not class_name:
-                continue
+class GoogleClient:
+    def __init__(self, sheet_name: str = "GrafenDaily"):
+        self.gc = gspread.service_account(filename=CREDS)
+        self.sh = self.gc.open(sheet_name)
 
-            # проверяем есть ли класс
-            result = await session.execute(
-                select(Class).where(Class.name == class_name)
-            )
-            class_obj = result.scalars().first()
-            if not class_obj:
-                class_obj = Class(name=class_name)
-                session.add(class_obj)
-                await session.flush()  # чтобы получить id
+    async def sync_google_to_db(self):
+        async with db_helper.get_session() as session:
+            await self._sync_classes(session)
+            await self._sync_families(session)
+            await self._sync_schedules(session)
 
-            # пользователь
-            result = await session.execute(
-                select(User).where(User.username == row.get("username"))
-            )
-            user_obj = result.scalars().first()
-            if not user_obj:
-                user_obj = User(
-                    username=row.get("username"),
-                    username2=row.get("username2"),
-                    class_id=class_obj.id,
-                )
-                session.add(user_obj)
+    async def _sync_classes(self, session):
+        classes_data = self.sh.worksheet("Config").get_all_records()
+
+        for row in classes_data:
+            num = int(row.get("class"))
+            chat_id = row.get("chat_id")
+
+            result = await session.execute(select(Class).where(Class.num == num))
+            db_class = result.scalars().first()
+
+            if db_class:
+                db_class.chat_id = chat_id  # обновляем существующую запись
             else:
-                # обновляем существующего
-                user_obj.username2 = row.get("username2")
-                user_obj.class_id = class_obj.id
+                session.add(Class(num=num, chat_id=chat_id))  # создаём новую
 
         await session.commit()
+        logger.info("Table Classes is updated")
 
-        # 2. Синк расписания
-        result = await session.execute(select(Class))
-        classes = result.scalars().all()
+    async def _sync_families(self, session):
+        family_data = self.sh.worksheet("Family").get_all_records()
 
-        for class_obj in classes:
-            schedule_rows = gclient.get_schedule_by_class(class_obj.name)
+        for row in family_data:
+            data_dict = {
+                "child": row.get("family"),
+                "mother": row.get("username"),
+                "father": row.get("username2"),
+                "class_num": int(row.get("class")),
+            }
+            family_obj = FamilyCreate.model_validate(data_dict, from_attributes=True)
+
+            result = await session.execute(
+                select(Family).where(Family.child == family_obj.child)
+            )
+            db_family = result.scalars().first()
+
+            if db_family:
+                for key, value in family_obj.model_dump().items():
+                    setattr(db_family, key, value)
+            else:
+                session.add(Family(**family_obj.model_dump()))
+
+        await session.commit()
+        logger.info("Table Families is updated")
+
+    async def _sync_schedules(self, session):
+        result = await session.execute(select(Family))
+        families = result.scalars().all()
+
+        for family_obj in families:
+            class_num = family_obj.class_num
+            schedule_rows = await asyncio.to_thread(
+                lambda: self.get_schedule_by_class(class_num)
+            )
+
             for row in schedule_rows:
                 date = row.get("date")
                 if not date:
                     continue
-                # проверяем есть ли запись
+
+                data_dict = {
+                    "date": date,
+                    "child_id": family_obj.id,
+                    "class_num": class_num,
+                    "text": row.get("text"),
+                    "telegram_id": row.get("telegram_id"),
+                    "telegram_id2": row.get("telegram_id2"),
+                }
+                schedule_obj = ScheduleCreate.model_validate(
+                    data_dict, from_attributes=True
+                )
+
                 result = await session.execute(
                     select(Schedule).where(
-                        Schedule.class_id == class_obj.id, Schedule.date == date
+                        Schedule.child_id == family_obj.id, Schedule.date == date
                     )
                 )
-                sched_obj = result.scalars().first()
-                if not sched_obj:
-                    sched_obj = Schedule(
-                        class_id=class_obj.id,
-                        date=date,
-                        text=row.get("text"),
-                        telegram_id=row.get("telegram_id"),
-                        telegram_id2=row.get("telegram_id2"),
-                    )
-                    session.add(sched_obj)
+                db_schedule = result.scalars().first()
+
+                if db_schedule:
+                    for key, value in schedule_obj.model_dump().items():
+                        setattr(db_schedule, key, value)
                 else:
-                    sched_obj.text = row.get("text")
-                    sched_obj.telegram_id = row.get("telegram_id")
-                    sched_obj.telegram_id2 = row.get("telegram_id2")
+                    session.add(Schedule(**schedule_obj.model_dump()))
 
         await session.commit()
+        logger.info("Table Schedules is updated")
+
+    def get_schedule_by_class(self, class_num: int) -> list[dict]:
+        try:
+            ws_class = self.sh.worksheet(f"Class_{class_num}")
+        except gspread.exceptions.WorksheetNotFound:
+            return []
+        return ws_class.get_all_records()
 
 
+# -----------------------
 # Тестовый запуск
+# -----------------------
 if __name__ == "__main__":
-    asyncio.run(sync_google_to_db())
+    asyncio.run(GoogleClient().sync_google_to_db())

@@ -9,6 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+DB_PATH = BASE_DIR / "schedule.db"
+
 LOG_DEFAULT_FORMAT = (
     "[%(asctime)s] | %(module)20s:%(lineno)-4d | %(levelname)-8s - %(message)s"
 )
@@ -31,7 +33,7 @@ class LoggingConfig(BaseModel):
 
 
 class DatabaseConfig(BaseModel):
-    url: PostgresDsn = "sqlite+aiosqlite:///./schedule.db"
+    url: PostgresDsn = f"sqlite+aiosqlite:///{DB_PATH}"
     echo: bool = False
     echo_pool: bool = False
     max_overflow: int = 10
