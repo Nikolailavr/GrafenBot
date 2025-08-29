@@ -2,7 +2,6 @@ import datetime
 import logging
 
 from apps.sender.bot.main_bot import bot
-from apps.sender.google_client import GoogleClient
 from apps.sender.misc import const
 
 from core.config import settings
