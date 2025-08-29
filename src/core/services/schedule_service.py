@@ -92,21 +92,27 @@ class ScheduleService:
         return schedules
 
     @staticmethod
-    async def get_tomorrow(username: str) -> list[Schedule]:
+    async def get_tomorrow(class_num: int) -> ScheduleWithFamily | None:
         """Расписание на завтра"""
         tomorrow = (datetime.today() + timedelta(days=1)).strftime(date_format)
 
-        async with db_helper.get_session() as session:
-            result = await session.execute(
-                select(Schedule)
-                .join(Family, Schedule.child_id == Family.id)
-                .where(
-                    ((Family.mother == username) | (Family.father == username))
-                    & (Schedule.date == tomorrow)
-                )
-                .order_by(Schedule.date)
-            )
-            return result.scalars().all()
+        families = await FamilyService.list_families()
+        class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+
+        # фильтруем только завтрашнюю дату
+        for s in class_schedules:
+            if s.date == tomorrow:
+                child = next((f for f in families if f.id == s.child_id), None)
+                if child:
+                    return ScheduleWithFamily(
+                            id=s.id,
+                            date=s.date,
+                            child=child.child,
+                            class_num=child.class_num,
+                            mother=child.mother,
+                            father=child.father,
+                        )
+        return None
 
     @staticmethod
     async def get_week(days: int = 5) -> Dict[int, List[ScheduleWithFamily]] | None:

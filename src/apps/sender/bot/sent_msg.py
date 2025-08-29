@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from core.config import bot
+from core.database.schemas import ScheduleWithFamily
 
 date_format_db = "%Y-%m-%d"
 date_format = "%d-%m-%Y"
@@ -48,6 +49,21 @@ class SentMessage:
             for item in schedule:
                 mess += f"\n{_convert_date(item.date)} — {item.child}"
 
+        await bot.send_message(
+            chat_id=chat_id,
+            text=mess,
+        )
+
+    @staticmethod
+    async def msg_tomorrow(schedule: ScheduleWithFamily, chat_id: int):
+        mess = (
+            f"👋 Приветствую!\n"
+            f"🍏 Перекус {schedule.date} приносит:\n"
+            f"👉 {schedule.child}\n"
+            f"📲 {schedule.mother}"
+        )
+        if schedule.father:
+            mess += f", {schedule.father}"
         await bot.send_message(
             chat_id=chat_id,
             text=mess,
