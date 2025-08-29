@@ -1,15 +1,30 @@
-from datetime import datetime
 import logging
 
 from aiogram import Router, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from apps.sender.misc import const
 from core.config import settings, bot
+from core.sync_gd import GoogleClient
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+
+@router.message(Command("sync"))
+async def __sync(message: Message):
+    if message.from_user.id != settings.telegram.admin_chat_id:
+        return
+    await bot.send_message(
+        chat_id=settings.telegram.admin_chat_id,
+        text="Sync started..",
+    )
+    await GoogleClient().sync_google_to_db()
+    await bot.send_message(
+        chat_id=settings.telegram.admin_chat_id,
+        text="Sync completed!",
+    )
+
 
 # @router.message(Command("check"))
 # async def check_command(message: Message):
@@ -28,12 +43,6 @@ router = Router()
 #     else:
 #         text = 'На эту дату нет данных'
 #     await bot.send_message(chat_id=message.chat.id, text=text)
-
-
-@router.message(Command("test"))
-async def test_command(message: Message):
-    await bot.send_message(chat_id=settings.telegram.admin_chat_id,
-                           text=const.TEXT_WELCOME)
 
 
 def register_admin_handlers(dp: Dispatcher) -> None:
