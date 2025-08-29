@@ -101,9 +101,9 @@ class ScheduleService:
         class_nums = list({f.class_num for f in user_families})
 
         # 3. Список ближайших дней
-        today_dt = datetime.datetime.today()
+        today_dt = datetime.today()
         selected_dates = [
-            (today_dt + datetime.timedelta(days=i)).strftime("%d-%m-%Y") for i in range(days * 2)
+            (today_dt + timedelta(days=i)).strftime("%d-%m-%Y") for i in range(days * 2)
         ]
 
         # 4. Сбор всех записей по классам и выбранным датам через ScheduleService
