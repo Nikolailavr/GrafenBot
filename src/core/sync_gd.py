@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-from core.database.db_helper import db_helper
 from core.database.schemas import ClassCreate, FamilyCreate, ScheduleCreate
 
 import gspread
@@ -48,9 +47,7 @@ class GoogleClient:
         )
 
         for row in family_data:
-            class_num = int(row.get("class")) if row.get("class") else None
-            if class_num is None:
-                continue
+            class_num = int(row.get("class"))
 
             # Проверяем, что такой класс есть
             existing_class = await ClassService.get_class(class_num)
@@ -76,9 +73,8 @@ class GoogleClient:
         classes = await ClassService.list_classes()
 
         for class_obj in classes:
-            class_num = class_obj.class_num
             schedule_rows = await asyncio.to_thread(
-                lambda: self.get_schedule_by_class(class_num)
+                lambda: self.get_schedule_by_class(class_obj.num)
             )
 
             for row in schedule_rows:
