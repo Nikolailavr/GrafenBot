@@ -5,6 +5,8 @@ from core.database.models import Base
 
 
 class Class(Base):
+    __tablename__ = "classes"
+
     num: Mapped[int] = mapped_column(Integer, primary_key=True)
     chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
 
