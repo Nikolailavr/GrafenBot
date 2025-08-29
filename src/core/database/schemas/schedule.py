@@ -12,3 +12,12 @@ class ScheduleCreate(ScheduleBase): ...
 
 class ScheduleRead(ScheduleBase):
     id: int
+
+
+class ScheduleWithFamily(BaseModel):
+    id: int
+    date: str
+    child: str
+    class_num: int
+    mother: Optional[str] = None
+    father: Optional[str] = None

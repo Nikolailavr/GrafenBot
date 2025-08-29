@@ -2,12 +2,18 @@ import datetime
 from typing import Optional, List
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from core.database.DAL.schedules_CRUD import ScheduleCRUD
 from core.database.db_helper import db_helper
-from core.database.models import Schedule, Family
-from core.database.schemas import ScheduleCreate, ScheduleRead
+from core.database.models import (
+    Schedule,
+    Family,
+)
+from core.database.schemas import (
+    ScheduleCreate,
+    ScheduleRead,
+    ScheduleWithFamily,
+)
 
 
 class ScheduleService:
@@ -79,10 +85,11 @@ class ScheduleService:
             return result.scalars().all()
 
     @staticmethod
-    async def get_week(username: str, days: int = 5) -> list[Schedule]:
+    async def get_week(username: str, days: int = 5) -> list[ScheduleWithFamily]:
         today = datetime.date.today().strftime("%d-%m-%Y")
 
         async with db_helper.get_session() as session:
+            # достаём даты
             result = await session.execute(
                 select(Schedule.date)
                 .join(Family, Schedule.child_id == Family.id)
@@ -94,14 +101,13 @@ class ScheduleService:
                 .order_by(Schedule.date)
             )
             all_dates = [row[0] for row in result.fetchall()]
-
             selected_dates = all_dates[:days]
             if not selected_dates:
                 return []
 
+            # достаём все записи вместе с Family
             result = await session.execute(
-                select(Schedule)
-                .options(selectinload(Schedule.family))
+                select(Schedule, Family)
                 .join(Family, Schedule.child_id == Family.id)
                 .where(
                     ((Family.mother == username) | (Family.father == username))
@@ -109,4 +115,19 @@ class ScheduleService:
                 )
                 .order_by(Schedule.date)
             )
-            return result.scalars().all()
+
+            rows = result.all()
+
+            # собираем схемы
+            schedules = [
+                ScheduleWithFamily(
+                    id=s.id,
+                    date=s.date,
+                    child=f.child,
+                    class_num=f.class_num,
+                    mother=f.mother,
+                    father=f.father,
+                )
+                for s, f in rows
+            ]
+            return schedules
