@@ -61,7 +61,9 @@ class ScheduleService:
     @staticmethod
     async def get_tomorrow(username: str) -> list[Schedule]:
         """Расписание на завтра"""
-        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%d-%m-%Y")
+        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime(
+            "%d-%m-%Y"
+        )
 
         async with db_helper.get_session() as session:
             result = await session.execute(
@@ -84,9 +86,7 @@ class ScheduleService:
             result = await session.execute(
                 select(Schedule)
                 .join(Family, Schedule.child_id == Family.id)
-                .where(
-                    (Family.mother == username) | (Family.father == username)
-                )
+                .where((Family.mother == username) | (Family.father == username))
                 .order_by(Schedule.date)
             )
             all_records = result.scalars().all()

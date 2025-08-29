@@ -36,7 +36,9 @@ async def send_welcome(message: Message):
 @router.message(Command("week"))
 async def week_schedule(message: Message):
     """Показать расписание на ближайшие 5 дней"""
-    schedules = await ScheduleService.get_week(username=message.from_user.username, days=5)
+    schedules = await ScheduleService.get_week(
+        username=message.from_user.username, days=5
+    )
 
     if not schedules:
         await message.answer("У вас нет расписания на ближайшую неделю.")
