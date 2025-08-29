@@ -44,6 +44,7 @@ class SentMessage:
         mess = f"Уважаемый {first_name}!\n📅 Ваш график на учебный год:"
 
         for class_num, schedule in schedules.items():
+            mess += "\n"
             for item in schedule:
                 mess += f"\n{_convert_date(item.date)} — {item.child}"
 
