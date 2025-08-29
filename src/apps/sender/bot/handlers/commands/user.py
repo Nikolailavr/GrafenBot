@@ -42,7 +42,11 @@ async def children_schedule(message: Message):
     if not schedules:
         await message.answer("У вас нет зарегистрированных детей с расписанием.")
         return
-    await SentMessage.msg_schedule(schedules, message.chat.id)
+    await SentMessage.msg_schedule(
+        schedules=schedules,
+        chat_id=message.chat.id,
+        first_name=message.from_user.first_name or "Родитель",
+    )
 
 
 def register_users_handlers(dp: Dispatcher) -> None:
