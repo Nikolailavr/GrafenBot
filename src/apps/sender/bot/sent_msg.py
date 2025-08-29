@@ -21,11 +21,11 @@ class SentMessage:
             )
             return
 
-        mess = f"График на ближайшие 5 дней:"
+        mess = f"📅 График на ближайшие 5 дней:"
         for class_num, s in schedules.items():
             mess += f"\n\nКласс {class_num}"
             for item in s:
-                mess += f"\n📅 {_convert_date(item.date)} — {item.child}"
+                mess += f"\n{_convert_date(item.date)} — {item.child}"
 
         await bot.send_message(
             chat_id=chat_id,
@@ -41,12 +41,12 @@ class SentMessage:
             )
             return
 
-        mess = f"Уважаемый {first_name}!\nВаш график на учебный год:"
+        mess = f"Уважаемый {first_name}!\n📅 Ваш график на учебный год:"
 
         for class_num, schedule in schedules.items():
             mess += f"\n\nКласс {class_num}:"
             for item in schedule:
-                mess += f"\n📅 {_convert_date(item.date)} — {item.child}"
+                mess += f"\n{_convert_date(item.date)} — {item.child}"
 
         await bot.send_message(
             chat_id=chat_id,
