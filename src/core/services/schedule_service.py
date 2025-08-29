@@ -129,7 +129,8 @@ class ScheduleService:
 
     @staticmethod
     async def get_week(
-        class_num: int, days: int = 5,
+        class_num: int,
+        days: int = 5,
     ) -> Dict[int, List[ScheduleWithFamily]] | None:
         families = await FamilyService.list_families()
         if not families:
