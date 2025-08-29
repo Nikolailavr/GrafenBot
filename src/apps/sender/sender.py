@@ -21,7 +21,6 @@ async def check_mess():
         await send_reminder_for_class(class_)
 
 
-
 async def send_reminder_for_class(class_: ClassRead):
     """
     Отправка напоминания по расписанию на следующий день для конкретного класса
