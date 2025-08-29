@@ -12,5 +12,4 @@ class ClassBase(BaseModel):
 class ClassCreate(ClassBase): ...
 
 
-class ClassRead(ClassBase):
-    families: List[FamilyRead] = []
+class ClassRead(ClassBase): ...

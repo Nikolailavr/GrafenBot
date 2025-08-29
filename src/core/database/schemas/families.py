@@ -16,4 +16,3 @@ class FamilyCreate(FamilyBase): ...
 
 class FamilyRead(FamilyBase):
     id: int
-    schedules: List[ScheduleRead] = []
