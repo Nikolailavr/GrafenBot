@@ -16,7 +16,6 @@ RUN poetry install --no-root
 COPY /src .
 
 RUN chmod +x prestart.sh
-RUN chmod +x run
 
 ENTRYPOINT ["./prestart.sh"]
 CMD ["python3", "./run_bot.py"]
