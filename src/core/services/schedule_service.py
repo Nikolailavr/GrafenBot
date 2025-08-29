@@ -2,6 +2,7 @@ import datetime
 from typing import Optional, List
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from core.database.DAL.schedules_CRUD import ScheduleCRUD
 from core.database.db_helper import db_helper
@@ -79,29 +80,33 @@ class ScheduleService:
 
     @staticmethod
     async def get_week(username: str, days: int = 5) -> list[Schedule]:
-        """Расписание на неделю (берём ближайшие N дней из БД)"""
         today = datetime.date.today().strftime("%d-%m-%Y")
 
         async with db_helper.get_session() as session:
             result = await session.execute(
-                select(Schedule)
+                select(Schedule.date)
                 .join(Family, Schedule.child_id == Family.id)
-                .where((Family.mother == username) | (Family.father == username))
+                .where(
+                    ((Family.mother == username) | (Family.father == username))
+                    & (Schedule.date >= today)
+                )
+                .group_by(Schedule.date)
                 .order_by(Schedule.date)
             )
-            all_records = result.scalars().all()
+            all_dates = [row[0] for row in result.fetchall()]
 
-            # фильтруем только >= сегодня
-            upcoming = [s for s in all_records if s.date >= today]
+            selected_dates = all_dates[:days]
+            if not selected_dates:
+                return []
 
-            # берём уникальные даты
-            seen_dates = set()
-            limited = []
-            for s in upcoming:
-                if s.date not in seen_dates:
-                    seen_dates.add(s.date)
-                if len(seen_dates) > days:
-                    break
-                limited.append(s)
-
-            return limited
+            result = await session.execute(
+                select(Schedule)
+                .options(selectinload(Schedule.family))
+                .join(Family, Schedule.child_id == Family.id)
+                .where(
+                    ((Family.mother == username) | (Family.father == username))
+                    & (Schedule.date.in_(selected_dates))
+                )
+                .order_by(Schedule.date)
+            )
+            return result.scalars().all()
