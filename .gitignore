@@ -141,3 +141,4 @@ GitHub.sublime-settings
 *.sqlite3
 creds.json
 docker-compose_secret.yml
+/src/schedule.db
