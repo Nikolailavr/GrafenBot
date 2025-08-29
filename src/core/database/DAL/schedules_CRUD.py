@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -66,4 +67,5 @@ class ScheduleCRUD:
         # при желании можно добавить фильтр по class_num через relationship
         result = await self.session.execute(query)
         schedules = result.scalars().all()
+        schedules.sort(key=lambda s: datetime.strptime(s.date, "%Y-%m-%d"))
         return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]
