@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal
 
 from aiogram import Bot
-from pydantic import BaseModel
+from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,10 +30,27 @@ class LoggingConfig(BaseModel):
         return logging.getLevelNamesMapping()[self.log_level.upper()]
 
 
+class DatabaseConfig(BaseModel):
+    url: PostgresDsn = "sqlite+aiosqlite:///./schedule.db"
+    echo: bool = False
+    echo_pool: bool = False
+    max_overflow: int = 10
+    pool_size: int = 5
+
+    naming_convention: dict[str, str] = {
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_N_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s",
+    }
+
+
 class Telegram(BaseModel):
     token: str
     admin_chat_id: int
     bot_username: str = "GrafenTmskBot"
+
 
 class Schedule(BaseModel):
     time_zone: str
@@ -51,6 +68,7 @@ class Settings(BaseSettings):
         env_prefix="APP_CONFIG__",
     )
     logging: LoggingConfig = LoggingConfig()
+    db: DatabaseConfig = DatabaseConfig()
     telegram: Telegram
     schedule: Schedule
 

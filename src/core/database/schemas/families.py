@@ -11,8 +11,7 @@ class FamilyBase(BaseModel):
     class_num: int
 
 
-class FamilyCreate(FamilyBase):
-    ...
+class FamilyCreate(FamilyBase): ...
 
 
 class FamilyRead(FamilyBase):

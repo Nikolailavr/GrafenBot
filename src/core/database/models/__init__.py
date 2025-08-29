@@ -1,9 +1,11 @@
 __all__ = (
+    "Base",
     "Class",
     "Family",
     "Schedule",
 )
 
-from .schedules import Schedule
-from .family import Family
+from .base import Base
 from .classes import Class
+from .family import Family
+from .schedules import Schedule

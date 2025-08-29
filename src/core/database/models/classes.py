@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database.models.base import Base
+from core.database.models import Base
 
 
 class Class(Base):
