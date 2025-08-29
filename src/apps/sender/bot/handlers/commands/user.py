@@ -20,35 +20,16 @@ async def send_welcome(message: Message):
 
 @router.message(Command("week"))
 async def week_schedule(message: Message):
-    """Показать расписание на ближайшие 5 дней"""
-    schedules = await ScheduleService.get_week(
-        username=message.from_user.username, days=5
-    )
+    service = ScheduleService()
+    schedules = await service.get_week(username=message.from_user.username, days=5)
 
     if not schedules:
-        await message.answer("У вас нет расписания на ближайшую неделю.")
+        await message.answer("Нет расписания на ближайшие дни.")
         return
 
-    mess = "📅 График на ближайшие 5 дней:"
-
-    # группируем по классу и дате
-    grouped = {}
+    mess = f"График на ближайшие 5 дней:"
     for s in schedules:
-        class_num = s.family.class_num if s.family else "?"
-        child = s.family.child if s.family else "?"
-        key = f"{class_num} ({child})"
-        if key not in grouped:
-            grouped[key] = {}
-        if s.date not in grouped[key]:
-            grouped[key][s.date] = []
-        grouped[key][s.date].append(s.text or "")
-
-    # формируем вывод
-    for class_info, days in grouped.items():
-        mess += f"\n\nКласс {class_info}:"
-        for date, lessons in days.items():
-            for lesson in lessons:
-                mess += f"\n{date} — {lesson}"
+        mess += f"\n📅 {s.date} — {s.child}\n"
 
     await message.answer(mess)
 
