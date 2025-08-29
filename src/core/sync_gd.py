@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 
 from core.database.schemas import ClassCreate, FamilyCreate, ScheduleCreate
@@ -79,6 +80,7 @@ class GoogleClient:
 
             for row in schedule_rows:
                 date = row.get("date")
+                date = datetime.datetime.strptime(date, date_format)
                 if not date:
                     continue
 
@@ -86,7 +88,7 @@ class GoogleClient:
                 family = await FamilyService.get_family(child=child)
 
                 schedule_in = ScheduleCreate(
-                    date=date,
+                    date=date.strftime("%Y-%m-%d"),
                     child_id=family.id,
                 )
 
