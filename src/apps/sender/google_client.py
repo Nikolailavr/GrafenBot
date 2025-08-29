@@ -28,7 +28,7 @@ class GoogleClient:
             or row.get("username2") == telegram_username
         ]
 
-        classes = [str(row.get("class")) for row in user_rows if row.get("class")]
+        classes = [str(row.get("class")) for row in user_rows]
 
         return classes
 
