@@ -69,9 +69,7 @@ class ScheduleService:
     @staticmethod
     async def get_tomorrow(username: str) -> list[Schedule]:
         """Расписание на завтра"""
-        tomorrow = (datetime.date.today() + timedelta(days=1)).strftime(
-            "%Y-%m-%d"
-        )
+        tomorrow = (datetime.date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
         async with db_helper.get_session() as session:
             result = await session.execute(
@@ -109,9 +107,7 @@ class ScheduleService:
         # 4. Сбор всех записей по классам и выбранным датам через ScheduleService
         schedules = []
         for class_num in class_nums:
-            class_schedules = await ScheduleService.list_schedules(
-                class_num=class_num
-            )
+            class_schedules = await ScheduleService.list_schedules(class_num=class_num)
             for s in class_schedules:
                 if s.date in selected_dates:
                     # находим child info
@@ -129,5 +125,5 @@ class ScheduleService:
                         )
 
         # 5. сортируем по дате
-        schedules.sort(key=lambda x: datetime.datetime.strptime(x.date, "%d-%m-%Y"))
+        schedules.sort(key=lambda x: datetime.strptime(x.date, "%d-%m-%Y"))
         return schedules[:days]
