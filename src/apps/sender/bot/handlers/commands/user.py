@@ -21,8 +21,13 @@ async def send_welcome(message: Message):
 
 @router.message(Command("week"))
 async def week_schedule(message: Message):
-    schedules = await ScheduleService.get_week(days=5)
-    await SentMessage.msg_week(schedules, message.chat.id)
+    username = message.from_user.username
+    if username:
+        classes = await ScheduleService.get_class_parents(username)
+        for class_ in classes:
+            schedules = await ScheduleService.get_week(class_, days=5)
+            if schedules:
+                await SentMessage.msg_week(schedules, message.chat.id)
 
 
 @router.message(Command("my_schedule"))

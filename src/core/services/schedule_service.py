@@ -115,36 +115,49 @@ class ScheduleService:
         return None
 
     @staticmethod
-    async def get_week(days: int = 5) -> Dict[int, List[ScheduleWithFamily]] | None:
+    async def get_class_parents(username: str):
+        families = await FamilyService.list_families()
+
+        # 1. Получаем семьи пользователя
+        user_families = [f for f in families if username in (f.mother, f.father)]
+        if not user_families:
+            return {}
+
+        # 2. Собираем классы
+        class_nums = list({f.class_num for f in user_families})
+        return class_nums
+
+    @staticmethod
+    async def get_week(
+        class_num: int, days: int = 5,
+    ) -> Dict[int, List[ScheduleWithFamily]] | None:
         families = await FamilyService.list_families()
         if not families:
             return None
 
-        class_nums = list({f.class_num for f in families})
         today_str = datetime.today().strftime(date_format)
 
         schedules: dict[int, list[ScheduleWithFamily]] = dict()
-        for class_num in class_nums:
-            class_schedules = await ScheduleService.list_schedules(class_num=class_num)
-            # находим индекс первой записи с сегодняшней датой
-            start_index = next(
-                (i for i, s in enumerate(class_schedules) if s.date >= today_str), None
-            )
-            if start_index is None:
-                continue  # нет записей сегодня и позже
+        class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+        # находим индекс первой записи с сегодняшней датой
+        start_index = next(
+            (i for i, s in enumerate(class_schedules) if s.date >= today_str), None
+        )
+        if start_index is None:
+            return None
 
-            # берём срез ближайших N дней
-            for s in class_schedules[start_index : start_index + days]:
-                child = next((f for f in families if f.id == s.child_id), None)
-                if child:
-                    schedules.setdefault(class_num, []).append(
-                        ScheduleWithFamily(
-                            id=s.id,
-                            date=s.date,
-                            child=child.child,
-                            class_num=child.class_num,
-                            mother=child.mother,
-                            father=child.father,
-                        )
+        # берём срез ближайших N дней
+        for s in class_schedules[start_index : start_index + days]:
+            child = next((f for f in families if f.id == s.child_id), None)
+            if child:
+                schedules.setdefault(class_num, []).append(
+                    ScheduleWithFamily(
+                        id=s.id,
+                        date=s.date,
+                        child=child.child,
+                        class_num=child.class_num,
+                        mother=child.mother,
+                        father=child.father,
                     )
+                )
         return schedules

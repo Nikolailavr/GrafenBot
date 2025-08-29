@@ -1,13 +1,8 @@
-import datetime
 import logging
+from datetime import datetime
 
-from sqlalchemy.util import await_only
-
-from apps.sender.bot.main_bot import bot
 from apps.sender.bot.sent_msg import SentMessage
-from apps.sender.misc import const
 
-from core.config import settings
 from core.database.schemas import ClassRead
 from core.services import ClassService, ScheduleService
 
@@ -31,3 +26,12 @@ async def send_reminder_for_class(class_: ClassRead):
             schedule=schedule,
             chat_id=class_.chat_id,
         )
+
+    today = datetime.today()
+    if today.isoweekday() == 5:
+        week = await ScheduleService.get_week(class_.num, days=5)
+        if week:
+            await SentMessage.msg_week(
+                schedules=week,
+                chat_id=class_.chat_id,
+            )
