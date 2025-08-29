@@ -69,7 +69,7 @@ class ScheduleService:
     @staticmethod
     async def get_tomorrow(username: str) -> list[Schedule]:
         """Расписание на завтра"""
-        tomorrow = (datetime.date.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+        tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
         async with db_helper.get_session() as session:
             result = await session.execute(
