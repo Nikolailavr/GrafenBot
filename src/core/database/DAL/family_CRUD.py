@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Family
-from core.database.schemas import FamilyCreate, FamilyRead, FamilyUpdate
+from core.database.schemas import FamilyCreate, FamilyRead
 
 
 class FamilyCRUD:

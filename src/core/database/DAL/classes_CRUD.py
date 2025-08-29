@@ -26,7 +26,7 @@ class ClassCRUD:
             return ClassRead.model_validate(class_obj, from_attributes=True)
         return None
 
-    async def update(self, num: int, class_in: ClassUpdate) -> Optional[ClassRead]:
+    async def update(self, num: int, class_in: ClassCreate) -> Optional[ClassRead]:
         result = await self.session.execute(select(Class).where(Class.num == num))
         class_obj = result.scalars().first()
         if not class_obj:
