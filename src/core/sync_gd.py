@@ -25,6 +25,8 @@ class GoogleClient:
         await self._sync_schedules()
 
     async def _sync_classes(self):
+        await ClassService.delete_table()
+
         classes_data = await asyncio.to_thread(
             lambda: self.sh.worksheet("Config").get_all_records()
         )
@@ -33,16 +35,13 @@ class GoogleClient:
             class_in = ClassCreate(
                 num=int(row.get("class")), chat_id=row.get("chat_id")
             )
-            # Создаём или обновляем через сервис
-            existing = await ClassService.get_class(class_in.num)
-            if existing:
-                await ClassService.update_class(class_in)
-            else:
-                await ClassService.create_class(class_in)
+            await ClassService.create_class(class_in)
 
         logger.info("Classes synced")
 
     async def _sync_families(self):
+        await FamilyService.delete_table()
+
         family_data = await asyncio.to_thread(
             lambda: self.sh.worksheet("Family").get_all_records()
         )
@@ -62,15 +61,13 @@ class GoogleClient:
                 class_num=class_num,
             )
 
-            existing_family = await FamilyService.get_family(child=row.get("family"))
-            if existing_family:
-                await FamilyService.update_family(row.get("family"), family_in)
-            else:
-                await FamilyService.create_family(family_in)
+            await FamilyService.create_family(family_in)
 
         logger.info("Families synced")
 
     async def _sync_schedules(self):
+        await ScheduleService.delete_table()
+
         classes = await ClassService.list_classes()
 
         for class_obj in classes:
@@ -94,24 +91,7 @@ class GoogleClient:
                     class_num=family.class_num,
                 )
 
-                # Сохраняем через сервис
-                existing_schedule = await ScheduleService.list_schedules(
-                    class_num=family.class_num
-                )
-                exists_for_date = next(
-                    (
-                        s
-                        for s in existing_schedule
-                        if s.date == date and s.class_num == family.class_num
-                    ),
-                    None,
-                )
-                if exists_for_date:
-                    await ScheduleService.update_schedule(
-                        exists_for_date.id, schedule_in
-                    )
-                else:
-                    await ScheduleService.create_schedule(schedule_in)
+                await ScheduleService.create_schedule(schedule_in)
 
         logger.info("Schedules synced")
 

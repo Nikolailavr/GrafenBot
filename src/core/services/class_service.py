@@ -1,5 +1,7 @@
 from typing import Optional, List
 
+from sqlalchemy import delete
+
 from core.database.DAL.classes_CRUD import ClassCRUD
 from core.database.db_helper import db_helper
 from core.database.schemas import ClassCreate, ClassRead
@@ -37,3 +39,8 @@ class ClassService:
         async with db_helper.get_session() as session:
             crud = ClassCRUD(session)
             return await crud.list()
+
+    @staticmethod
+    async def delete_table() -> None:
+        async with db_helper.get_session() as session:
+            await ClassCRUD(session).delete_all()

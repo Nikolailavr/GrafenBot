@@ -42,3 +42,8 @@ class FamilyService:
         async with db_helper.get_session() as session:
             crud = FamilyCRUD(session)
             return await crud.list(class_num=class_num)
+
+    @staticmethod
+    async def delete_table() -> None:
+        async with db_helper.get_session() as session:
+            await FamilyCRUD(session).delete_all()

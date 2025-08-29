@@ -59,6 +59,11 @@ class ScheduleService:
             return await crud.list(child_id=child_id, class_num=class_num)
 
     @staticmethod
+    async def delete_table() -> None:
+        async with db_helper.get_session() as session:
+            await ScheduleCRUD(session).delete_all()
+
+    @staticmethod
     async def get_by_parents(username: str) -> dict[int, list[ScheduleWithFamily]]:
         """Найти все расписания по username родителей, сгруппированные по class_num"""
         families = await FamilyService.list_families()

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Schedule, Family
@@ -76,3 +76,7 @@ class ScheduleCRUD:
         schedules.sort(key=lambda s: datetime.strptime(s.date, "%Y-%m-%d"))
 
         return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]
+
+    async def delete_all(self) -> None:
+        await self.session.execute(delete(Schedule))
+        await self.session.commit()

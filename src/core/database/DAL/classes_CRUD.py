@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Class
@@ -55,3 +55,7 @@ class ClassCRUD:
         result = await self.session.execute(select(Class))
         classes = result.scalars().all()
         return [ClassRead.model_validate(c, from_attributes=True) for c in classes]
+
+    async def delete_all(self) -> None:
+        await self.session.execute(delete(Class))
+        await self.session.commit()

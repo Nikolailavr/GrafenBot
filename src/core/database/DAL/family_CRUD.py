@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Family
@@ -67,3 +67,7 @@ class FamilyCRUD:
         result = await self.session.execute(query)
         families = result.scalars().all()
         return [FamilyRead.model_validate(f, from_attributes=True) for f in families]
+
+    async def delete_all(self) -> None:
+        await self.session.execute(delete(Family))
+        await self.session.commit()
