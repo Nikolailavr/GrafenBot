@@ -94,9 +94,8 @@ class ScheduleService:
 
         class_nums = list({f.class_num for f in families})
         today_str = datetime.today().strftime(date_format)
-        schedules = []
 
-        schedules = dict()
+        schedules: dict[int, list[ScheduleWithFamily]] = dict()
         for class_num in class_nums:
             class_schedules = await ScheduleService.list_schedules(class_num=class_num)
             # находим индекс первой записи с сегодняшней датой
@@ -110,7 +109,7 @@ class ScheduleService:
             for s in class_schedules[start_index : start_index + days]:
                 child = next((f for f in families if f.id == s.child_id), None)
                 if child:
-                    schedules[class_num].append(
+                    schedules.setdefault(class_num, []).append(
                         ScheduleWithFamily(
                             id=s.id,
                             date=s.date,
