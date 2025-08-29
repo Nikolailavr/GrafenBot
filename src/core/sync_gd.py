@@ -1,15 +1,13 @@
 import asyncio
 import logging
 
-from sqlalchemy import select, delete
-
 from core.database.db_helper import db_helper
-from core.database.models import Class, Family, Schedule
 from core.database.schemas import ClassCreate, FamilyCreate, ScheduleCreate
 
 import gspread
 
 from core.config import BASE_DIR
+from core.services import ClassService, FamilyService, ScheduleService
 
 CREDS = BASE_DIR / "creds.json"
 date_format = "%d-%m-%Y"
@@ -22,61 +20,63 @@ class GoogleClient:
         self.sh = self.gc.open(sheet_name)
 
     async def sync_google_to_db(self):
-        async with db_helper.get_session() as session:
-            await self._sync_classes(session)
-            await self._sync_families(session)
-            await self._sync_schedules(session)
+        await self._sync_classes()
+        await self._sync_families()
+        await self._sync_schedules()
 
-    async def _sync_classes(self, session):
-        classes_data = self.sh.worksheet("Config").get_all_records()
+    async def _sync_classes(self):
+        classes_data = await asyncio.to_thread(
+            lambda: self.sh.worksheet("Config").get_all_records()
+        )
 
         for row in classes_data:
-            num = int(row.get("class"))
-            chat_id = row.get("chat_id")
-
-            result = await session.execute(select(Class).where(Class.num == num))
-            db_class = result.scalars().first()
-
-            if db_class:
-                db_class.chat_id = chat_id  # обновляем существующую запись
+            class_in = ClassCreate(
+                num=int(row.get("class")), chat_id=row.get("chat_id")
+            )
+            # Создаём или обновляем через сервис
+            existing = await ClassService.get_class(class_in.num)
+            if existing:
+                await ClassService.update_class(class_in.num, class_in)
             else:
-                session.add(Class(num=num, chat_id=chat_id))  # создаём новую
+                await ClassService.create_class(class_in)
 
-        await session.commit()
-        logger.info("Table Classes is updated")
+        logger.info("Classes synced")
 
-    async def _sync_families(self, session):
-        family_data = self.sh.worksheet("Family").get_all_records()
+    async def _sync_families(self):
+        family_data = await asyncio.to_thread(
+            lambda: self.sh.worksheet("Family").get_all_records()
+        )
 
         for row in family_data:
-            data_dict = {
-                "child": row.get("family"),
-                "mother": row.get("username"),
-                "father": row.get("username2"),
-                "class_num": int(row.get("class")),
-            }
-            family_obj = FamilyCreate.model_validate(data_dict, from_attributes=True)
+            class_num = int(row.get("class")) if row.get("class") else None
+            if class_num is None:
+                continue
 
-            result = await session.execute(
-                select(Family).where(Family.child == family_obj.child)
+            # Проверяем, что такой класс есть
+            existing_class = await ClassService.get_class(class_num)
+            if not existing_class:
+                continue
+
+            family_in = FamilyCreate(
+                child=row.get("family"),
+                mother=row.get("username"),
+                father=row.get("username2"),
+                class_num=class_num,
             )
-            db_family = result.scalars().first()
 
-            if db_family:
-                for key, value in family_obj.model_dump().items():
-                    setattr(db_family, key, value)
+            existing_family = await FamilyService.get_family(child=row.get("family"))
+            if existing_family:
+                await FamilyService.update_family(row.get("family"), family_in)
             else:
-                session.add(Family(**family_obj.model_dump()))
+                await FamilyService.create_family(family_in)
 
-        await session.commit()
-        logger.info("Table Families is updated")
+        logger.info("Families synced")
 
-    async def _sync_schedules(self, session):
-        result = await session.execute(select(Family))
-        families = result.scalars().all()
+    async def _sync_schedules(self):
+        classes = await ClassService.list_classes()
 
-        for family_obj in families:
-            class_num = family_obj.class_num
+        for class_obj in classes:
+            class_num = class_obj.class_num
             schedule_rows = await asyncio.to_thread(
                 lambda: self.get_schedule_by_class(class_num)
             )
@@ -86,33 +86,29 @@ class GoogleClient:
                 if not date:
                     continue
 
-                data_dict = {
-                    "date": date,
-                    "child_id": family_obj.id,
-                    "class_num": class_num,
-                    "text": row.get("text"),
-                    "telegram_id": row.get("telegram_id"),
-                    "telegram_id2": row.get("telegram_id2"),
-                }
-                schedule_obj = ScheduleCreate.model_validate(
-                    data_dict, from_attributes=True
+                child = row.get("text")
+                family = await FamilyService.get_family(child=child)
+
+                schedule_in = ScheduleCreate(
+                    date=date,
+                    child_id=family.id,
                 )
 
-                result = await session.execute(
-                    select(Schedule).where(
-                        Schedule.child_id == family_obj.id, Schedule.date == date
+                # Сохраняем через сервис
+                existing_schedule = await ScheduleService.list_schedules(
+                    child_id=family.id
+                )
+                exists_for_date = next(
+                    (s for s in existing_schedule if s.date == date), None
+                )
+                if exists_for_date:
+                    await ScheduleService.update_schedule(
+                        exists_for_date.id, schedule_in
                     )
-                )
-                db_schedule = result.scalars().first()
-
-                if db_schedule:
-                    for key, value in schedule_obj.model_dump().items():
-                        setattr(db_schedule, key, value)
                 else:
-                    session.add(Schedule(**schedule_obj.model_dump()))
+                    await ScheduleService.create_schedule(schedule_in)
 
-        await session.commit()
-        logger.info("Table Schedules is updated")
+        logger.info("Schedules synced")
 
     def get_schedule_by_class(self, class_num: int) -> list[dict]:
         try:
