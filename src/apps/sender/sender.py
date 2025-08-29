@@ -5,12 +5,14 @@ from apps.sender.bot.sent_msg import SentMessage
 
 from core.database.schemas import ClassRead
 from core.services import ClassService, ScheduleService
+from core.sync_gd import GoogleClient
 
 logger = logging.getLogger(__name__)
 date_format = "%d-%m-%Y"
 
 
 async def check_mess():
+    await GoogleClient().sync_google_to_db()
     classes = await ClassService.list_classes()
     for class_ in classes:
         await send_reminder_for_class(class_)
