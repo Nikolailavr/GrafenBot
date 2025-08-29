@@ -90,6 +90,7 @@ class GoogleClient:
                 schedule_in = ScheduleCreate(
                     date=date.strftime("%Y-%m-%d"),
                     child_id=family.id,
+                    class_num=family.class_num,
                 )
 
                 # Сохраняем через сервис

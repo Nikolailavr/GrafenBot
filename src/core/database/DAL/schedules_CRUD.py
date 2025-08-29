@@ -3,7 +3,7 @@ from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import Schedule
+from core.database.models import Schedule, Family
 from core.database.schemas import ScheduleCreate, ScheduleRead
 
 
@@ -62,10 +62,17 @@ class ScheduleCRUD:
         self, child_id: Optional[int] = None, class_num: Optional[int] = None
     ) -> List[ScheduleRead]:
         query = select(Schedule)
+
         if child_id is not None:
             query = query.where(Schedule.child_id == child_id)
-        # при желании можно добавить фильтр по class_num через relationship
+
+        if class_num is not None:
+            query = query.where(Schedule.class_num == class_num)
+
         result = await self.session.execute(query)
         schedules = result.scalars().all()
+
+        # сортировка по дате
         schedules.sort(key=lambda s: datetime.strptime(s.date, "%Y-%m-%d"))
+
         return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]

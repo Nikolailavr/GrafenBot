@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class ScheduleBase(BaseModel):
     date: str  # формат "dd-mm-YYYY"
     child_id: Optional[int] = None  # используем id Family для связи
+    class_num: int
 
 
 class ScheduleCreate(ScheduleBase): ...

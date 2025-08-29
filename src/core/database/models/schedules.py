@@ -10,5 +10,6 @@ class Schedule(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     date: Mapped[str] = mapped_column(String, index=True)  # dd-mm-YYYY
     child_id: Mapped[int] = mapped_column(ForeignKey("families.id"))
+    class_num: Mapped[int] = mapped_column(Integer)
 
     child: Mapped["Family"] = relationship("Family", back_populates="schedules")
