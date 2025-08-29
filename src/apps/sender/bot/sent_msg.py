@@ -58,12 +58,12 @@ class SentMessage:
     async def msg_tomorrow(schedule: ScheduleWithFamily, chat_id: int):
         mess = (
             f"👋 Приветствую!\n"
-            f"🍏 Перекус {schedule.date} приносит:\n"
+            f"🍏 Перекус {_convert_date(schedule.date)} приносит:\n"
             f"👉 {schedule.child}\n"
-            f"📲 {schedule.mother}"
+            f"📲 @{schedule.mother}"
         )
         if schedule.father:
-            mess += f", {schedule.father}"
+            mess += f", @{schedule.father}"
         await bot.send_message(
             chat_id=chat_id,
             text=mess,
