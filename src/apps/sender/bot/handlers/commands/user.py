@@ -28,8 +28,9 @@ async def week_schedule(message: Message):
         return
 
     mess = f"График на ближайшие 5 дней:"
-    for s in schedules:
-        mess += f"\n📅 {s.date} — {s.child}\n"
+    for class_num, s in schedules.items():
+        mess += f"\n\nКласс {class_num}\n"
+        mess += f"📅 {s.date} — {s.child}\n"
 
     await message.answer(mess)
 

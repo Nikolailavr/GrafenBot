@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from multiprocessing.connection import families
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from sqlalchemy import select
 
@@ -87,7 +87,7 @@ class ScheduleService:
             return result.scalars().all()
 
     @staticmethod
-    async def get_week(username: str, days: int = 5) -> list[ScheduleWithFamily]:
+    async def get_week(username: str, days: int = 5) -> Dict[int, List[ScheduleWithFamily]]:
         families = await FamilyService.list_families()
         if not families:
             return []
@@ -96,6 +96,7 @@ class ScheduleService:
         today_str = datetime.today().strftime(date_format)
         schedules = []
 
+        schedules = dict()
         for class_num in class_nums:
             class_schedules = await ScheduleService.list_schedules(class_num=class_num)
             # находим индекс первой записи с сегодняшней датой
@@ -109,7 +110,7 @@ class ScheduleService:
             for s in class_schedules[start_index : start_index + days]:
                 child = next((f for f in families if f.id == s.child_id), None)
                 if child:
-                    schedules.append(
+                    schedules[class_num].append(
                         ScheduleWithFamily(
                             id=s.id,
                             date=s.date,
