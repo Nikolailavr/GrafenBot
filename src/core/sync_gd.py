@@ -2,11 +2,12 @@ import asyncio
 import datetime
 import logging
 
+from core import settings
 from core.database.schemas import ClassCreate, FamilyCreate, ScheduleCreate
 
 import gspread
 
-from core.config import BASE_DIR
+from core.config import BASE_DIR, bot
 from core.services import ClassService, FamilyService, ScheduleService
 
 CREDS = BASE_DIR / "creds.json"
@@ -20,9 +21,16 @@ class GoogleClient:
         self.sh = self.gc.open(sheet_name)
 
     async def sync_google_to_db(self):
-        await self._sync_classes()
-        await self._sync_families()
-        await self._sync_schedules()
+        try:
+            await self._sync_classes()
+            await self._sync_families()
+            await self._sync_schedules()
+        except Exception as ex:
+            logger.error(ex)
+            bot.send_message(
+                chat_id=settings.telegram.admin_chat_id,
+                text="Ошибка при синхронизации таблицы",
+            )
 
     async def _sync_classes(self):
         await ClassService.delete_table()
@@ -74,12 +82,12 @@ class GoogleClient:
             schedule_rows = await asyncio.to_thread(
                 lambda: self.get_schedule_by_class(class_obj.num)
             )
-
             for row in schedule_rows:
                 date = row.get("date")
-                date = datetime.datetime.strptime(date, date_format)
-                date = date.strftime("%Y-%m-%d")
-                if not date:
+                if date:
+                    date = datetime.datetime.strptime(date, date_format)
+                    date = date.strftime("%Y-%m-%d")
+                else:
                     continue
 
                 child = row.get("text")
