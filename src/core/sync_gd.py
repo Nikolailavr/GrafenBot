@@ -89,15 +89,21 @@ class GoogleClient:
                     date = date.strftime("%Y-%m-%d")
                 else:
                     continue
+                try:
+                    child = row.get("text")
+                    family = await FamilyService.get_family(child=child)
 
-                child = row.get("text")
-                family = await FamilyService.get_family(child=child)
-
-                schedule_in = ScheduleCreate(
-                    date=date,
-                    child_id=family.id,
-                    class_num=family.class_num,
-                )
+                    schedule_in = ScheduleCreate(
+                        date=date,
+                        child_id=family.id,
+                        class_num=family.class_num,
+                    )
+                except Exception as ex:
+                    logger.error("Bad data for %s, date: %s", child, date)
+                    bot.send_message(
+                        chat_id=settings.telegram.admin_chat_id,
+                        text=("Недостоверные данные для %s, дата: %s", child, date),
+                    )
 
                 await ScheduleService.create_schedule(schedule_in)
 
