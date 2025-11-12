@@ -30,8 +30,9 @@ async def send_reminder_for_class(class_: ClassRead):
         )
 
     today = datetime.today()
-    if today.isoweekday() == 7:
-        week = await ScheduleService.get_week(class_.num, days=5)
+    if today.isoweekday() == 7 and class_.num != 4:
+        days = 5 if class_.num < 4 else 6
+        week = await ScheduleService.get_week(class_.num, days=days)
         if week:
             await SentMessage.msg_week(
                 schedules=week,

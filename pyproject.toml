@@ -1,26 +1,23 @@
-[project]
+[tool.poetry]
 name = "grafenbot"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Nikolai Lavrov",email = "mail@nlavrov.ru"}
-]
+authors = ["lnv <mail@nlavrov.ru>"]
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "pydantic (>=2.11.7,<3.0.0)",
-    "pydantic-settings (>=2.10.1,<3.0.0)",
-    "aiogram (>=3.22.0,<4.0.0)",
-    "gspread (>=6.2.1,<7.0.0)",
-    "schedule (>=1.2.2,<2.0.0)",
-    "pytz (>=2025.2,<2026.0)",
-    "black (>=25.1.0,<26.0.0)",
-    "alembic (>=1.16.5,<2.0.0)",
-    "sqlalchemy (>=2.0.43,<3.0.0)",
-    "aiosqlite (>=0.21.0,<0.22.0)"
-]
 
+[tool.poetry.dependencies]
+python = "^3.13"
+pydantic = ">=2.11.7"
+pydantic-settings = "^2.11.0"
+aiogram = "^3.22.0"
+gspread = ">=6.2.1"
+schedule = ">=1.2.2"
+pytz = "^2025.2"
+black = "^25.9.0"
+alembic = "^1.16.5"
+sqlalchemy = "^2.0.43"
+aiosqlite = ">=0.21.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

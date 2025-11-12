@@ -21,9 +21,10 @@ class SentMessage:
                 text="Нет расписания на ближайшие дни.",
             )
             return
-
-        mess = f"📅 График на ближайшие 5 дней:"
+        mess = ""
         for class_num, s in schedules.items():
+            days = len(s)
+            mess = f"📅 График на ближайшие {days} дней:"
             for item in s:
                 mess += f"\n{_convert_date(item.date)} — {item.child}"
 
