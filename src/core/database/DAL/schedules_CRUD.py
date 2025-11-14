@@ -59,9 +59,14 @@ class ScheduleCRUD:
         return True
 
     async def list(
-        self, child_id: Optional[int] = None, class_num: Optional[int] = None
+            self, child_id: Optional[int] = None, class_num: Optional[int] = None
     ) -> List[ScheduleRead]:
-        query = select(Schedule)
+        from datetime import date
+
+        # Получаем сегодняшнюю дату
+        today = date.today().isoformat()  # "YYYY-MM-DD"
+
+        query = select(Schedule).where(Schedule.date >= today)
 
         if child_id is not None:
             query = query.where(Schedule.child_id == child_id)
@@ -69,11 +74,11 @@ class ScheduleCRUD:
         if class_num is not None:
             query = query.where(Schedule.class_num == class_num)
 
+        # Добавляем сортировку по дате в запросе
+        query = query.order_by(Schedule.date)
+
         result = await self.session.execute(query)
         schedules = result.scalars().all()
-
-        # сортировка по дате
-        schedules.sort(key=lambda s: datetime.strptime(s.date, "%Y-%m-%d"))
 
         return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]
 
