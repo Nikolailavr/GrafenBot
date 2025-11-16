@@ -44,6 +44,21 @@ async def __tomorrow(message: Message, command: CommandObject):
     else:
         await message.answer("Завтра нет перекусов")
 
+
+@router.message(Command("testweek"))
+async def __week(message: Message, command: CommandObject):
+    if message.from_user.id != settings.telegram.admin_chat_id:
+        return
+    class_num = command.args
+    if not class_num.isdigit():
+        await message.answer("Need class_num")
+    class_num = int(class_num)
+    days = 5 if class_num < 4 else 6
+    schedules = await ScheduleService.get_week(class_num, days=days)
+    if schedules:
+        await SentMessage.msg_week(schedules, message.chat.id)
+
+
 @router.message(Command("test"))
 async def __test(message: Message):
     if message.from_user.id != settings.telegram.admin_chat_id:
