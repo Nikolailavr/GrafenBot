@@ -27,7 +27,7 @@ class GoogleClient:
             await self._sync_schedules()
         except Exception as ex:
             logger.error(ex)
-            bot.send_message(
+            await bot.send_message(
                 chat_id=settings.telegram.admin_chat_id,
                 text="Ошибка при синхронизации таблицы",
             )
@@ -100,7 +100,7 @@ class GoogleClient:
                     )
                 except Exception as ex:
                     logger.error("Bad data for %s, date: %s", child, date)
-                    bot.send_message(
+                    await bot.send_message(
                         chat_id=settings.telegram.admin_chat_id,
                         text=("Недостоверные данные для %s, дата: %s", child, date),
                     )
