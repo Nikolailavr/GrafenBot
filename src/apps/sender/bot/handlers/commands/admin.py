@@ -50,13 +50,16 @@ async def __week(message: Message, command: CommandObject):
     if message.from_user.id != settings.telegram.admin_chat_id:
         return
     class_num = command.args
+    if class_num is None:
+        await message.answer("Укажите номер класса через пробел")
     if not class_num.isdigit():
-        await message.answer("Need class_num")
+        await message.answer("Номер класса должен быть числом")
     class_num = int(class_num)
     days = 5 if class_num < 4 else 6
     schedules = await ScheduleService.get_week(class_num, days=days)
-    if schedules:
-        await SentMessage.msg_week(schedules, message.chat.id)
+    class_ = await ClassService.get_class(class_num)
+    if schedules and class_:
+        await SentMessage.msg_week(schedules, class_.chat_id)
 
 
 @router.message(Command("test"))
