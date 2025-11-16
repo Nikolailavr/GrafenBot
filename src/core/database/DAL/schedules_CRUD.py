@@ -83,5 +83,8 @@ class ScheduleCRUD:
         return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]
 
     async def delete_all(self) -> None:
-        await self.session.execute(delete(Schedule))
-        await self.session.commit()
+        try:
+            await self.session.execute(delete(Schedule))
+            await self.session.commit()
+        except Exception:
+            ...

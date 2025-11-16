@@ -69,5 +69,9 @@ class FamilyCRUD:
         return [FamilyRead.model_validate(f, from_attributes=True) for f in families]
 
     async def delete_all(self) -> None:
-        await self.session.execute(delete(Family))
-        await self.session.commit()
+        try:
+            await self.session.execute(delete(Family))
+            await self.session.commit()
+        except Exception:
+            ...
+

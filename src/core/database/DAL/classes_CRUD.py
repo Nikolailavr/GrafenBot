@@ -61,5 +61,5 @@ class ClassCRUD:
         try:
             await self.session.execute(delete(Class))
             await self.session.commit()
-        except OperationalError:
+        except Exception:
             pass
