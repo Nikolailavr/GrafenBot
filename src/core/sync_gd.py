@@ -104,6 +104,7 @@ class GoogleClient:
                         chat_id=settings.telegram.admin_chat_id,
                         text=("Недостоверные данные для %s, дата: %s", child, date),
                     )
+                    continue
 
                 await ScheduleService.create_schedule(schedule_in)
 
