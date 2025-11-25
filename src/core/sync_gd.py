@@ -120,7 +120,7 @@ class GoogleClient:
             ws_class = self.sh.worksheet(f"Class_{class_num}")
         except gspread.exceptions.WorksheetNotFound:
             return []
-        return ws_class.get_all_records()
+        return ws_class.get_all_records(expected_headers=["id_", "date", "text", "telegram_id", "telegram_id2"])
 
 
 # -----------------------
