@@ -93,6 +93,10 @@ class GoogleClient:
                     child = row.get("text")
                     family = await FamilyService.get_family(child=child)
                     if not family:
+                        await bot.send_message(
+                            chat_id=settings.telegram.admin_chat_id,
+                            text=("Недостоверные данные для %s, дата: %s, класс: %s", child, date, class_obj.num),
+                        )
                         continue
 
                     schedule_in = ScheduleCreate(
