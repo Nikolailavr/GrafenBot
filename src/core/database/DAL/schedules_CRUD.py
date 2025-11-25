@@ -31,7 +31,7 @@ class ScheduleCRUD:
 
     async def update(
         self, schedule_id: int, schedule_in: ScheduleCreate
-    ) -> Optional[ScheduleRead]:
+    ) -> Optional[Schedule]:
         result = await self.session.execute(
             select(Schedule).where(Schedule.id == schedule_id)
         )
@@ -44,7 +44,7 @@ class ScheduleCRUD:
 
         await self.session.commit()
         await self.session.refresh(schedule)
-        return ScheduleRead.model_validate(schedule, from_attributes=True)
+        return schedule
 
     async def delete(self, schedule_id: int) -> bool:
         result = await self.session.execute(

@@ -59,7 +59,10 @@ class ScheduleService:
     async def update_schedule(schedule_id: int, schedule_in: ScheduleCreate) -> Optional[ScheduleRead]:
         async with db_helper.get_session() as session:
             crud = ScheduleCRUD(session)
-            return await crud.update(schedule_id, schedule_in)
+            result = await crud.update(schedule_id, schedule_in)
+            if result is None:
+                return None
+            return ScheduleRead.model_validate(result, from_attributes=True)
 
     @staticmethod
     async def delete_schedule(schedule_id: int) -> bool:
