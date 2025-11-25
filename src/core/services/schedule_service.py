@@ -109,7 +109,6 @@ class ScheduleService:
     async def get_tomorrow(class_num: int) -> Optional[ScheduleRead]:
         """Расписание на завтра"""
         tomorrow = (datetime.today() + timedelta(days=1)).strftime(DATE_FORMAT)
-        families = await ScheduleService._get_families()
         class_schedules = await ScheduleService.list_schedules(class_num=class_num)
 
         for s in class_schedules:
