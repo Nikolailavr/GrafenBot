@@ -95,7 +95,7 @@ class GoogleClient:
                     if family is None:
                         await bot.send_message(
                             chat_id=settings.telegram.admin_chat_id,
-                            text=("Недостоверные данные для %s, дата: %s, класс: %s", child, date, class_obj.num),
+                            text=f"Недостоверные данные для {child}, дата: {date}, класс: {class_obj.num}"
                         )
                         continue
 
