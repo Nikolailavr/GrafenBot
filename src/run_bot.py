@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 async def schedule_run():
-    logger.info(f"{datetime.datetime.now()} | INFO - Schedule start")
+    logger.info("Schedule start")
     (
         schedule.every()
         .day.at(settings.schedule.time_to_send, settings.schedule.time_zone)
