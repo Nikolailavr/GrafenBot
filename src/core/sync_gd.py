@@ -95,7 +95,7 @@ class GoogleClient:
                     if family is None:
                         await bot.send_message(
                             chat_id=settings.telegram.admin_chat_id,
-                            text=f"Недостоверные данные для {child}, дата: {date}, класс: {class_obj.num}"
+                            text=f"Недостоверные данные для {child}\nдата: {date}\nкласс: {class_obj.num}"
                         )
                         continue
 
@@ -108,7 +108,7 @@ class GoogleClient:
                     logger.error("Bad data for %s, date: %s", child, date)
                     await bot.send_message(
                         chat_id=settings.telegram.admin_chat_id,
-                        text=f"Недостоверные данные для {child}, дата: {date}, класс: {class_obj.num}"
+                        text=f"Недостоверные данные для {child}\nдата: {date}\nкласс: {class_obj.num}"
                     )
 
                 await ScheduleService.create_schedule(schedule_in)
