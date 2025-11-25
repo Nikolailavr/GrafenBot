@@ -25,7 +25,7 @@ async def week_schedule(message: Message):
     if username:
         classes = await ScheduleService.get_class_parents(username)
         for class_ in classes:
-            days = 5 if class_.num < 4 else 6
+            days = 5 if class_ < 4 else 6
             schedules = await ScheduleService.get_week(class_, days=days)
             if schedules:
                 await SentMessage.msg_week(schedules, message.chat.id)

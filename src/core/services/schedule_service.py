@@ -128,7 +128,6 @@ class ScheduleService:
 
     @staticmethod
     async def get_week(class_num: int, days: int = 5) -> Optional[Dict[int, List[ScheduleRead]]]:
-        families = await ScheduleService._get_families()
         class_schedules = await ScheduleService.list_schedules(class_num=class_num)
         today_str = datetime.today().strftime(DATE_FORMAT)
 
@@ -140,10 +139,14 @@ class ScheduleService:
         result: Dict[int, List[ScheduleRead]] = {}
 
         for s in schedules_slice:
-            family = ScheduleService._find_family_for_child(families, s.child)
-            if family:
-                result.setdefault(class_num, []).append(
-                    ScheduleService._build_schedule_read(s, family)
+            result.setdefault(class_num, []).append(
+                ScheduleRead(
+                    id=s.id,
+                    date=s.date,
+                    child=s.child,
+                    class_num=s.class_num,
+                    mother=s.mother,
+                    father=s.father,
                 )
-
+            )
         return result
