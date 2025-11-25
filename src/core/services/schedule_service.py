@@ -25,18 +25,18 @@ class ScheduleService:
         return [f for f in families if username in (f.mother, f.father)]
 
     @staticmethod
-    def _find_family_for_child(families: list, child_id: str):
-        return next((f for f in families if f.child == child_id), None)
+    def _find_family_for_child(families: list, child: str):
+        return next((f for f in families if f.child == child), None)
 
     @staticmethod
-    def _build_schedule_read(schedule, family) -> ScheduleRead:
+    def _build_schedule_read(schedule) -> ScheduleRead:
         return ScheduleRead(
             id=schedule.id,
             date=schedule.date,
-            child=family.child,
-            class_num=family.class_num,
-            mother=family.mother,
-            father=family.father,
+            child=schedule.child,
+            class_num=schedule.class_num,
+            mother=schedule.mother,
+            father=schedule.father,
         )
 
     # ======================================================
@@ -100,7 +100,7 @@ class ScheduleService:
                 family = ScheduleService._find_family_for_child(user_families, s.child)
                 if family:
                     result.setdefault(class_num, []).append(
-                        ScheduleService._build_schedule_read(s, family)
+                        ScheduleService._build_schedule_read(s)
                     )
 
         return result
@@ -114,10 +114,7 @@ class ScheduleService:
 
         for s in class_schedules:
             if s.date == tomorrow:
-                family = ScheduleService._find_family_for_child(families, s.child)
-                if family:
-                    return ScheduleService._build_schedule_read(s, family)
-
+                return ScheduleService._build_schedule_read(s)
         return None
 
     @staticmethod
@@ -140,13 +137,6 @@ class ScheduleService:
 
         for s in schedules_slice:
             result.setdefault(class_num, []).append(
-                ScheduleRead(
-                    id=s.id,
-                    date=s.date,
-                    child=s.child,
-                    class_num=s.class_num,
-                    mother=s.mother,
-                    father=s.father,
-                )
+                ScheduleService._build_schedule_read(s)
             )
         return result
