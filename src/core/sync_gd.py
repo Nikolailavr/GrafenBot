@@ -92,6 +92,8 @@ class GoogleClient:
                 try:
                     child = row.get("text")
                     family = await FamilyService.get_family(child=child)
+                    if not family:
+                        continue
 
                     schedule_in = ScheduleCreate(
                         date=date,
@@ -104,7 +106,6 @@ class GoogleClient:
                         chat_id=settings.telegram.admin_chat_id,
                         text=("Недостоверные данные для %s, дата: %s", child, date),
                     )
-                    continue
 
                 await ScheduleService.create_schedule(schedule_in)
 
