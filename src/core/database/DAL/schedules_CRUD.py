@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Sequence
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -59,8 +59,8 @@ class ScheduleCRUD:
         return True
 
     async def list(
-            self, child_id: Optional[int] = None, class_num: Optional[int] = None
-    ) -> List[ScheduleRead]:
+            self, child: Optional[str] = None, class_num: Optional[int] = None
+    ) -> Sequence[Schedule]:
         from datetime import date
 
         # Получаем сегодняшнюю дату
@@ -68,8 +68,8 @@ class ScheduleCRUD:
 
         query = select(Schedule).where(Schedule.date >= today)
 
-        if child_id is not None:
-            query = query.where(Schedule.child_id == child_id)
+        if child is not None:
+            query = query.where(Schedule.child == child)
 
         if class_num is not None:
             query = query.where(Schedule.class_num == class_num)
@@ -78,9 +78,9 @@ class ScheduleCRUD:
         query = query.order_by(Schedule.date)
 
         result = await self.session.execute(query)
-        schedules = result.scalars().all()
+        return result.scalars().all()
 
-        return [ScheduleRead.model_validate(s, from_attributes=True) for s in schedules]
+
 
     async def delete_all(self) -> None:
         try:
