@@ -33,8 +33,12 @@ def _choose_mess(schedule: ScheduleRead):
         # День пиццы
         mess = (
             "🍕🍕🍕 УРА! Завтра день ПИЦЦЫ! 🍕🍕🍕\n"
-            "📲 Не забудьте заказать ПИЦЦУ"
+            "📲 Не забудьте заказать ПИЦЦУ\n"
         )
+        if schedule.mother:
+            mess += f"@{schedule.mother} "
+        if schedule.father:
+            mess += f"@{schedule.father}"
     else:
         # Обычное сообщение про перекус
         mess = (
