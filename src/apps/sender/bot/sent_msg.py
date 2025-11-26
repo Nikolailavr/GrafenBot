@@ -7,9 +7,46 @@ date_format_db = "%Y-%m-%d"
 date_format = "%d-%m-%Y"
 
 
+WEEKDAYS_RU = [
+    "понедельник", "вторник", "среду",
+    "четверг", "пятницу", "субботу", "воскресенье"
+]
+
+MONTHS_RU = [
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря"
+]
+
 def _convert_date(date: str) -> str:
     converted_date = datetime.strptime(date, date_format_db)
-    return converted_date.strftime(date_format)
+    weekday = WEEKDAYS_RU[converted_date.weekday()]
+    day = converted_date.day
+    month = MONTHS_RU[converted_date.month - 1]
+    year = converted_date.year
+    return f"{weekday}, {day} {month} {year}"
+
+def _choose_mess(schedule: ScheduleRead):
+    text = schedule.child.lower()
+
+    # Если в строке ребёнка есть "пицца" или "пиццы"
+    if "пицца" in text or "пиццы" in text:
+        # День пиццы
+        mess = (
+            "🍕🍕🍕 УРА! Завтра день ПИЦЦЫ! 🍕🍕🍕\n"
+            "📲 Не забудьте заказать ПИЦЦУ"
+        )
+    else:
+        # Обычное сообщение про перекус
+        mess = (
+            "🍎 🍊 🍌 🍏 🫐 🍉 🍇\n"
+            f"📆 Завтра в {_convert_date(schedule.date)}\n"
+            "🥪 Перекус приносит:\n"
+            f"👉 {schedule.child}\n"
+            f"📲 @{schedule.mother}"
+        )
+        if schedule.father:
+            mess += f", @{schedule.father}"
+    return mess
 
 
 class SentMessage:
@@ -54,17 +91,10 @@ class SentMessage:
             text=mess,
         )
 
+
     @staticmethod
     async def msg_tomorrow(schedule: ScheduleRead, chat_id: int):
-        mess = (
-            f"👋 Приветствую!\n"
-            f"🍏 Перекус {_convert_date(schedule.date)} приносит:\n"
-            f"👉 {schedule.child}\n"
-            f"📲 @{schedule.mother}"
-        )
-        if schedule.father:
-            mess += f", @{schedule.father}"
         await bot.send_message(
             chat_id=chat_id,
-            text=mess,
+            text=_choose_mess(schedule),
         )
