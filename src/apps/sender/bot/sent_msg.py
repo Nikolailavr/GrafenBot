@@ -17,13 +17,16 @@ MONTHS_RU = [
     "июля", "августа", "сентября", "октября", "ноября", "декабря"
 ]
 
-def _convert_date(date: str) -> str:
+def _convert_date(date: str, need_week: bool = False) -> str:
     converted_date = datetime.strptime(date, date_format_db)
     weekday = WEEKDAYS_RU[converted_date.weekday()]
     day = converted_date.day
     month = MONTHS_RU[converted_date.month - 1]
     year = converted_date.year
-    return f"{weekday}, {day} {month} {year}"
+    if need_week:
+        return f"{weekday},\n 📅 {day} {month} {year}"
+    else:
+        return f"{day} {month} {year}"
 
 def _choose_mess(schedule: ScheduleRead):
     text = schedule.child.lower()
@@ -32,7 +35,8 @@ def _choose_mess(schedule: ScheduleRead):
     if "пицца" in text or "пиццы" in text:
         # День пиццы
         mess = (
-            "🍕🍕🍕 УРА! Завтра день ПИЦЦЫ! 🍕🍕🍕\n"
+            "🍕 🍕 🍕 🍕 🍕\n"
+            "УРА! Завтра день ПИЦЦЫ!\n"
             "📲 Не забудьте заказать ПИЦЦУ\n"
         )
         if schedule.mother:
@@ -42,8 +46,8 @@ def _choose_mess(schedule: ScheduleRead):
     else:
         # Обычное сообщение про перекус
         mess = (
-            "🍎 🍊 🍌 🍏 🫐 🍉 🍇\n"
-            f"📆 Завтра в {_convert_date(schedule.date)}\n"
+            "🍎 🍊 🍌 🍏 🫐 🍉 🍇\n\n"
+            f"📅 Завтра в {_convert_date(schedule.date, need_week=True)}\n"
             "🥪 Перекус приносит:\n"
             f"👉 {schedule.child}\n"
             f"📲 @{schedule.mother}"
