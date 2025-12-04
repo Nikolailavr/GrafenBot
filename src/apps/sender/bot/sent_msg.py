@@ -24,7 +24,7 @@ def _convert_date(date: str, need_week: bool = False) -> str:
     month = MONTHS_RU[converted_date.month - 1]
     year = converted_date.year
     if need_week:
-        return f"{weekday},\n 📅 {day} {month} {year}"
+        return f"{weekday},\n📅 {day} {month} {year}"
     else:
         return f"{day} {month} {year}"
 
