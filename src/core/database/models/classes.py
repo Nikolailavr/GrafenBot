@@ -7,7 +7,9 @@ from core.database.models import Base
 class Class(Base):
     __tablename__ = "classes"
 
-    num: Mapped[int] = mapped_column(Integer, primary_key=True)
-    chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    num: Mapped[int] = mapped_column(Integer, nullable=False)
+    chat_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
     families: Mapped[list["Family"]] = relationship(back_populates="class_")
