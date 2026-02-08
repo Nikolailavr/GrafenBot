@@ -90,7 +90,7 @@ class ScheduleCRUD:
 
     async def add_all(self, schedules: List[ScheduleCreate]):
         db_objects = [
-            Schedule(**s.model_dump())  # .dict() если у вас старый Pydantic
+            Schedule(**s.model_dump())
             for s in schedules
         ]
 
