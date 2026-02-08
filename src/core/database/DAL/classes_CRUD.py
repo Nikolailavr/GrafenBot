@@ -13,12 +13,12 @@ class ClassCRUD:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, class_in: ClassCreate) -> ClassRead:
+    async def create(self, class_in: ClassCreate) -> Class:
         class_obj = Class(**class_in.model_dump())
         self.session.add(class_obj)
         await self.session.commit()
         await self.session.refresh(class_obj)
-        return ClassRead.model_validate(class_obj, from_attributes=True)
+        return class_obj
 
     async def get(self, num: int) -> Optional[ClassRead]:
         result = await self.session.execute(select(Class).where(Class.num == num))

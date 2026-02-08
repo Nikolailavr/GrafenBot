@@ -13,8 +13,8 @@ class ClassService:
     @staticmethod
     async def create_class(class_in: ClassCreate) -> ClassRead:
         async with db_helper.get_session() as session:
-            crud = ClassCRUD(session)
-            return await crud.create(class_in)
+            class_ = await ClassCRUD(session).create(class_in)
+            return ClassRead.model_validate(class_, from_attributes=True)
 
     @staticmethod
     async def get_class(num: int) -> Optional[ClassRead]:

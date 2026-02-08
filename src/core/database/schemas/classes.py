@@ -12,4 +12,5 @@ class ClassBase(BaseModel):
 class ClassCreate(ClassBase): ...
 
 
-class ClassRead(ClassBase): ...
+class ClassRead(ClassBase):
+    id: int
