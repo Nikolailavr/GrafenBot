@@ -142,3 +142,11 @@ class ScheduleService:
                 cls._build_schedule_read(s)
             )
         return result
+
+    @staticmethod
+    async def create_schedules_bulk(schedules: list[ScheduleCreate]):
+        async with db_helper.get_session() as session:
+            # Превращаем Pydantic модели в объекты SQLAlchemy
+            new_records = [ScheduleCreate(**s.model_dump()) for s in schedules]
+            session.add_all(new_records)
+            await session.commit()
