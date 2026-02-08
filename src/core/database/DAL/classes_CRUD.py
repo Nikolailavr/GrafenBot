@@ -1,5 +1,5 @@
 from sqlite3 import OperationalError
-from typing import Optional, List
+from typing import Optional, List, Sequence
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,10 +52,9 @@ class ClassCRUD:
         await self.session.commit()
         return True
 
-    async def list(self) -> List[ClassRead]:
+    async def list(self) -> Sequence[Class]:
         result = await self.session.execute(select(Class))
-        classes = result.scalars().all()
-        return [ClassRead.model_validate(c, from_attributes=True) for c in classes]
+        return result.scalars().unique().all()
 
     async def delete_all(self) -> None:
         try:

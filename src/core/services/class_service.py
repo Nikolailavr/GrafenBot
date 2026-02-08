@@ -37,8 +37,8 @@ class ClassService:
     @staticmethod
     async def list_classes() -> List[ClassRead]:
         async with db_helper.get_session() as session:
-            crud = ClassCRUD(session)
-            return await crud.list()
+            classes = await ClassCRUD(session).list()
+            return [ClassRead.model_validate(c, from_attributes=True) for c in classes]
 
     @staticmethod
     async def delete_table() -> None:

@@ -1,9 +1,9 @@
-from datetime import datetime
-from typing import Optional, List, Sequence
+from datetime import date
+from typing import Optional, Sequence
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import Schedule, Family
+from core.database.models import Schedule
 from core.database.schemas import ScheduleCreate, ScheduleRead
 
 
@@ -61,7 +61,6 @@ class ScheduleCRUD:
     async def list(
             self, child: Optional[str] = None, class_num: Optional[int] = None
     ) -> Sequence[Schedule]:
-        from datetime import date
 
         # Получаем сегодняшнюю дату
         today = date.today().isoformat()  # "YYYY-MM-DD"
