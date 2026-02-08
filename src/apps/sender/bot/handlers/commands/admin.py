@@ -1,10 +1,13 @@
 import logging
 
-from aiogram import Router, Dispatcher
+from aiogram import Router, Dispatcher, F, Bot
 from aiogram.filters import Command, CommandObject
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from apps.sender.bot.sent_msg import SentMessage
+from apps.sender.bot.services.delete_msg import delete_by_link
 from apps.sender.sender import check_mess
 from core.config import settings, bot
 from core.services import ScheduleService, ClassService
@@ -12,6 +15,15 @@ from core.sync_gd import GoogleClient
 
 logger = logging.getLogger(__name__)
 router = Router()
+
+class DeleteMessageStates(StatesGroup):
+    waiting_for_link = State()  # Состояние ожидания ссылки
+
+
+@router.message(DeleteMessageStates.waiting_for_link, Command("cancel"))
+async def cancel_delete(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Удаление отменено.")
 
 
 @router.message(Command("sync"))
@@ -69,6 +81,33 @@ async def __test(message: Message):
     if message.from_user.id != settings.telegram.admin_chat_id:
         return
     await check_mess()
+
+
+@router.message(Command("delete"))
+async def __delete(message: Message, state: FSMContext):
+    # Проверка на админа (замените на вашу логику)
+    if message.from_user.id != settings.telegram.admin_chat_id:
+        return
+
+    await message.answer("Пришлите ссылку на сообщение, которое нужно удалить.")
+    # Устанавливаем состояние ожидания
+    await state.set_state(DeleteMessageStates.waiting_for_link)
+
+# 2. Ожидание ввода ссылки
+@router.message(DeleteMessageStates.waiting_for_link, F.text)
+async def process_delete_by_link(message: Message, state: FSMContext):
+    link = message.text.strip()
+
+    # Вызываем метод удаления (который мы написали ранее)
+    success = await delete_by_link(message.bot, link)
+
+    if success:
+        await message.answer("✅ Сообщение успешно удалено!")
+    else:
+        await message.answer("❌ Не удалось удалить. Проверьте ссылку или права бота в том чате.")
+
+    # Сбрасываем состояние, чтобы бот перестал ждать ссылку
+    await state.clear()
 
 def register_admin_handlers(dp: Dispatcher) -> None:
     dp.include_router(router)
