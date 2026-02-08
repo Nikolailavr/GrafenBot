@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -87,3 +87,12 @@ class ScheduleCRUD:
             await self.session.commit()
         except Exception:
             ...
+
+    async def add_all(self, schedules: List[ScheduleCreate]):
+        db_objects = [
+            Schedule(**s.model_dump())  # .dict() если у вас старый Pydantic
+            for s in schedules
+        ]
+
+        self.session.add_all(db_objects)
+        await self.session.commit()

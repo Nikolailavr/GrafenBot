@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 
 from core.database.DAL.schedules_CRUD import ScheduleCRUD
 from core.database.db_helper import db_helper
+from core.database.models import Schedule
 from core.database.schemas import ScheduleCreate, ScheduleRead
 from core.services import FamilyService
 
@@ -82,6 +83,11 @@ class ScheduleService:
         async with db_helper.get_session() as session:
             await ScheduleCRUD(session).delete_all()
 
+    @staticmethod
+    async def create_schedules_bulk(schedules: list[ScheduleCreate]):
+        async with db_helper.get_session() as session:
+            await ScheduleCRUD(session).add_all(schedules)
+
     # ======================================================
     # Расширенные методы
     # ======================================================
@@ -143,10 +149,3 @@ class ScheduleService:
             )
         return result
 
-    @staticmethod
-    async def create_schedules_bulk(schedules: list[ScheduleCreate]):
-        async with db_helper.get_session() as session:
-            # Превращаем Pydantic модели в объекты SQLAlchemy
-            new_records = [ScheduleCreate(**s.model_dump()) for s in schedules]
-            session.add_all(new_records)
-            await session.commit()
