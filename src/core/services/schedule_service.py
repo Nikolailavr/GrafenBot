@@ -86,11 +86,11 @@ class ScheduleService:
     # Расширенные методы
     # ======================================================
 
-    @staticmethod
-    async def get_by_parents(username: str) -> dict[int, List[ScheduleRead]]:
+    @classmethod
+    async def get_by_parents(cls, username: str) -> dict[int, List[ScheduleRead]]:
         """Все расписания по username родителей, сгруппированные по class_num"""
-        families = await ScheduleService._get_families()
-        user_families = ScheduleService._filter_families_by_user(families, username)
+        families = await cls._get_families()
+        user_families = cls._filter_families_by_user(families, username)
         if not user_families:
             return {}
 
@@ -98,36 +98,36 @@ class ScheduleService:
         result: dict[int, List[ScheduleRead]] = {}
 
         for class_num in class_nums:
-            class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+            class_schedules = await cls.list_schedules(class_num=class_num)
             for s in class_schedules:
-                family = ScheduleService._find_family_for_child(user_families, s.child)
+                family = cls._find_family_for_child(user_families, s.child)
                 if family:
                     result.setdefault(class_num, []).append(
-                        ScheduleService._build_schedule_read(s)
+                        cls._build_schedule_read(s)
                     )
 
         return result
 
-    @staticmethod
-    async def get_tomorrow(class_num: int) -> Optional[ScheduleRead]:
+    @classmethod
+    async def get_tomorrow(cls, class_num: int) -> Optional[ScheduleRead]:
         """Расписание на завтра"""
         tomorrow = (datetime.today() + timedelta(days=1)).strftime(DATE_FORMAT)
-        class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+        class_schedules = await cls.list_schedules(class_num=class_num)
 
         for s in class_schedules:
             if s.date == tomorrow:
-                return ScheduleService._build_schedule_read(s)
+                return cls._build_schedule_read(s)
         return None
 
-    @staticmethod
-    async def get_class_parents(username: str) -> List[int]:
-        families = await ScheduleService._get_families()
-        user_families = ScheduleService._filter_families_by_user(families, username)
+    @classmethod
+    async def get_class_parents(cls, username: str) -> List[int]:
+        families = await cls._get_families()
+        user_families = cls._filter_families_by_user(families, username)
         return list({f.class_num for f in user_families}) if user_families else []
 
-    @staticmethod
-    async def get_week(class_num: int, days: int = 5) -> Optional[Dict[int, List[ScheduleRead]]]:
-        class_schedules = await ScheduleService.list_schedules(class_num=class_num)
+    @classmethod
+    async def get_week(cls, class_num: int, days: int = 5) -> Optional[Dict[int, List[ScheduleRead]]]:
+        class_schedules = await cls.list_schedules(class_num=class_num)
         today_str = datetime.today().strftime(DATE_FORMAT)
 
         start_index = next((i for i, s in enumerate(class_schedules) if s.date >= today_str), None)
@@ -139,6 +139,6 @@ class ScheduleService:
 
         for s in schedules_slice:
             result.setdefault(class_num, []).append(
-                ScheduleService._build_schedule_read(s)
+                cls._build_schedule_read(s)
             )
         return result
