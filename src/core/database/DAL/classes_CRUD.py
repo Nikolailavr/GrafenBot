@@ -54,7 +54,7 @@ class ClassCRUD:
 
     async def list(self) -> Sequence[Class]:
         result = await self.session.execute(select(Class))
-        return result.scalars().unique().all()
+        return result.scalars().all()
 
     async def delete_all(self) -> None:
         try:

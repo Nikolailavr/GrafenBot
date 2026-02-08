@@ -77,12 +77,16 @@ class GoogleClient:
         await ScheduleService.delete_table()
 
         classes = await ClassService.list_classes()
+        # Собираем уникальные номера
+        class_nums = {class_obj.num for class_obj in classes}
 
-        for class_obj in classes:
+        for num in class_nums:
             schedule_rows = await asyncio.to_thread(
-                lambda: self.get_schedule_by_class(class_obj.num)
+                lambda: self.get_schedule_by_class(num)
             )
             for row in schedule_rows:
+                schedule_in = None
+                child = ""
                 date = row.get("date")
                 if date:
                     date = datetime.datetime.strptime(date, date_format)
@@ -96,7 +100,7 @@ class GoogleClient:
                     schedule_in = ScheduleCreate(
                         date=date,
                         child=child,
-                        class_num=class_obj.num,
+                        class_num=num,
                         mother=mother,
                         father=father,
                     )
@@ -105,10 +109,10 @@ class GoogleClient:
                         "Bad data for %s, date: %s", child, date)
                     await bot.send_message(
                         chat_id=settings.telegram.admin_chat_id,
-                        text=f"Недостоверные данные\nТекст: {child}\nДата: {date}\nКласс: {class_obj.num}"
+                        text=f"Недостоверные данные\nТекст: {child}\nДата: {date}\nКласс: {num}"
                     )
-
-                await ScheduleService.create_schedule(schedule_in)
+                if schedule_in:
+                    await ScheduleService.create_schedule(schedule_in)
 
         logger.info("Schedules synced")
 
