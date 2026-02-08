@@ -28,6 +28,7 @@ async def delete_by_link(bot: Bot, link: str) -> bool:
         chat_id = f"@{chat_part}" # Для публичных каналов/групп
 
     try:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="!")
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
         return True
     except TelegramBadRequest as e:
