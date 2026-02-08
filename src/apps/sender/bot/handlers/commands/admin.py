@@ -38,9 +38,10 @@ async def __tomorrow(message: Message, command: CommandObject):
         await message.answer("Need class_num")
     class_num = int(class_num)
     schedule = await ScheduleService.get_tomorrow(class_num)
+    class_data = await ClassService.get_class(class_num)
     if schedule:
-        class_data = await ClassService.get_class(class_num)
-        await SentMessage.msg_tomorrow(schedule, class_data.chat_id)
+        for class_ in class_data:
+            await SentMessage.msg_tomorrow(schedule, class_.chat_id)
     else:
         await message.answer("Завтра нет перекусов")
 
@@ -59,7 +60,8 @@ async def __week(message: Message, command: CommandObject):
     schedules = await ScheduleService.get_week(class_num, days=days)
     class_ = await ClassService.get_class(class_num)
     if schedules and class_:
-        await SentMessage.msg_week(schedules, class_.chat_id)
+        for c in class_:
+            await SentMessage.msg_week(schedules, c.chat_id)
 
 
 @router.message(Command("test"))

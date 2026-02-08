@@ -20,11 +20,11 @@ class ClassCRUD:
         await self.session.refresh(class_obj)
         return class_obj
 
-    async def get(self, num: int) -> Optional[ClassRead]:
+    async def get(self, num: int) -> Sequence[Class] | None:
         result = await self.session.execute(select(Class).where(Class.num == num))
-        class_obj = result.scalars().first()
+        class_obj = result.scalars().all()
         if class_obj:
-            return ClassRead.model_validate(class_obj, from_attributes=True)
+            return class_obj
         return None
 
     async def update(self, class_in: ClassCreate) -> Optional[ClassRead]:

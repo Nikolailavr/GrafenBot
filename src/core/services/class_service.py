@@ -17,10 +17,10 @@ class ClassService:
             return ClassRead.model_validate(class_, from_attributes=True)
 
     @staticmethod
-    async def get_class(num: int) -> Optional[ClassRead]:
+    async def get_class(num: int) -> List[ClassRead]:
         async with db_helper.get_session() as session:
-            crud = ClassCRUD(session)
-            return await crud.get(num)
+            class_ = await ClassCRUD(session).get(num)
+            return [ClassRead.model_validate(c, from_attributes=True) for c in class_]
 
     @staticmethod
     async def update_class(class_in: ClassCreate) -> Optional[ClassRead]:
