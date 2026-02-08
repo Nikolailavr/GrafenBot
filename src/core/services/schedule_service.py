@@ -3,7 +3,6 @@ from typing import Optional, List, Dict
 
 from core.database.DAL.schedules_CRUD import ScheduleCRUD
 from core.database.db_helper import db_helper
-from core.database.models import Schedule
 from core.database.schemas import ScheduleCreate, ScheduleRead
 from core.services import FamilyService
 
