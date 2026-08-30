@@ -26,10 +26,10 @@ class GoogleClient:
             await self._sync_families()
             await self._sync_schedules()
         except Exception as ex:
-            logger.error(ex)
+            logger.exception("Критическая ошибка при синхронизации таблицы")
             await bot.send_message(
                 chat_id=settings.telegram.admin_chat_id,
-                text="Ошибка при синхронизации таблицы",
+                text=f"Критическая ошибка при синхронизации таблицы:\n{ex}",
             )
 
     async def _sync_classes(self):
@@ -40,8 +40,22 @@ class GoogleClient:
         )
 
         for row in classes_data:
+            class_raw = row.get("class")
+
+            # Проверяем, что класс указан и является числом
+            if class_raw == "" or class_raw is None:
+                logger.warning(f"Пропущена строка в Config, нет номера класса: {row}")
+                continue
+
+            try:
+                class_num = int(class_raw)
+            except ValueError:
+                logger.warning(f"Пропущена строка в Config, неверный формат класса: {class_raw}")
+                continue
+
             class_in = ClassCreate(
-                num=int(row.get("class")), chat_id=row.get("chat_id")
+                num=class_num,
+                chat_id=row.get("chat_id") or None  # Заменяем "" на None, если пусто
             )
             await ClassService.create_class(class_in)
 
@@ -55,17 +69,35 @@ class GoogleClient:
         )
 
         for row in family_data:
-            class_num = int(row.get("class"))
+            class_raw = row.get("class")
 
-            # Проверяем, что такой класс есть
+            # Проверяем наличие класса
+            if class_raw == "" or class_raw is None:
+                logger.warning(f"Пропущена семья, не указан класс: {row}")
+                continue
+
+            try:
+                class_num = int(class_raw)
+            except ValueError:
+                logger.warning(f"Пропущена семья, неверный формат класса: {class_raw}")
+                continue
+
+            # Проверяем, что такой класс есть в базе
             existing_class = await ClassService.get_class(class_num)
             if not existing_class:
+                logger.warning(f"Семья пропущена, класс {class_num} не найден в БД")
+                continue
+
+            # Проверяем, что указан ребенок/семья (если это обязательное поле)
+            child_name = row.get("family")
+            if not child_name:
+                logger.warning(f"Пропущена строка, не указано имя (family): {row}")
                 continue
 
             family_in = FamilyCreate(
-                child=row.get("family"),
-                mother=row.get("username"),
-                father=row.get("username2"),
+                child=child_name,
+                mother=row.get("username") or None,
+                father=row.get("username2") or None,
                 class_num=class_num,
             )
 
@@ -87,31 +119,39 @@ class GoogleClient:
             )
             for row in schedule_rows:
                 date_str = row.get("date")
+
+                # Если дата пустая — пропускаем
                 if not date_str:
                     continue
 
                 try:
-                    date_dt = datetime.datetime.strptime(date_str, date_format)
+                    date_dt = datetime.datetime.strptime(str(date_str).strip(), date_format)
                     formatted_date = date_dt.strftime("%Y-%m-%d")
 
                     child = row.get("text")
+                    if not child:
+                        # Если нет текста (ребенка), нет смысла создавать запись
+                        continue
+
                     schedule_in = ScheduleCreate(
                         date=formatted_date,
                         child=child,
                         class_num=num,
-                        mother=row.get("telegram_id"),
-                        father=row.get("telegram_id2"),
+                        mother=row.get("telegram_id") or None,
+                        father=row.get("telegram_id2") or None,
                     )
-                    # Добавляем в список, а не в базу
+                    # Добавляем в список
                     schedules_to_create.append(schedule_in)
 
-                except Exception as ex:
-                    logger.error("Bad data for %s, date: %s", row.get("text"), date_str)
-                    # Уведомление админа можно оставить здесь, так как это редкое событие
+                except ValueError:
+                    # Отлавливаем именно ошибку парсинга даты, чтобы не ломать весь скрипт
+                    logger.error("Bad date format for %s, date: %s", row.get("text"), date_str)
                     await bot.send_message(
                         chat_id=settings.telegram.admin_chat_id,
-                        text=f"Недостоверные данные\nТекст: {row.get('text')}\nДата: {date_str}\nКласс: {num}"
+                        text=f"Неверный формат даты!\nТекст: {row.get('text')}\nДата: {date_str}\nКласс: {num}"
                     )
+                except Exception as ex:
+                    logger.error("Error processing row: %s. Error: %s", row, ex)
 
         # ВАЖНО: сохраняем всё одним махом
         if schedules_to_create:
@@ -124,6 +164,9 @@ class GoogleClient:
             ws_class = self.sh.worksheet(f"Class_{class_num}")
         except gspread.exceptions.WorksheetNotFound:
             return []
+
+        # Если expected_headers не совпадает с реальными, gspread тоже может ругаться.
+        # Если структура жесткая, оставляем как есть.
         return ws_class.get_all_records(expected_headers=["id_", "date", "text", "telegram_id", "telegram_id2"])
 
 
