@@ -96,8 +96,8 @@ class GoogleClient:
 
             family_in = FamilyCreate(
                 child=child_name,
-                mother=row.get("username") or None,
-                father=row.get("username2") or None,
+                mother=str(row.get("username") or ""),
+                father=str(row.get("username2") or ""),
                 class_num=class_num,
             )
 
