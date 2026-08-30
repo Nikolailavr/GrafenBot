@@ -19,11 +19,21 @@ router = Router()
 class DeleteMessageStates(StatesGroup):
     waiting_for_link = State()  # Состояние ожидания ссылки
 
+class ScheduleStates(StatesGroup):
+    waiting_for_tomorrow_class = State()
+    waiting_for_week_class = State()
 
-@router.message(DeleteMessageStates.waiting_for_link, Command("cancel"))
-async def cancel_delete(message: Message, state: FSMContext):
+
+
+@router.message(Command("cancel"))
+async def cmd_cancel(message: Message, state: FSMContext):
+    """Команда для отмены любого текущего действия"""
+    current_state = await state.get_state()
+    if current_state is None:
+        return  # Если отменять нечего, просто игнорируем
+
     await state.clear()
-    await message.answer("Удаление отменено.")
+    await message.answer("Действие отменено. ❌")
 
 
 @router.message(Command("sync"))
@@ -40,41 +50,80 @@ async def __sync(message: Message):
         text="Sync completed!",
     )
 
-
+# ==========================================
+# ЛОГИКА ДЛЯ /tomorrow
+# ==========================================
 @router.message(Command("tomorrow"))
-async def __tomorrow(message: Message, command: CommandObject):
+async def cmd_tomorrow_start(message: Message, state: FSMContext):
+    """Шаг 1: Получаем команду и просим номер класса"""
     if message.from_user.id != settings.telegram.admin_chat_id:
         return
-    class_num = command.args
-    if not class_num.isdigit():
-        await message.answer("Need class_num")
-    class_num = int(class_num)
+
+    await message.answer("Введите номер класса (или /cancel для отмены):")
+    # Переводим бота в режим ожидания ввода для tomorrow
+    await state.set_state(ScheduleStates.waiting_for_tomorrow_class)
+
+
+@router.message(ScheduleStates.waiting_for_tomorrow_class)
+async def process_tomorrow_class(message: Message, state: FSMContext):
+    """Шаг 2: Ловим введенный текст и обрабатываем его"""
+    if not message.text.isdigit():
+        await message.answer("Пожалуйста, введите число или нажмите /cancel")
+        return
+
+    class_num = int(message.text)
+
+    # Очищаем состояние, чтобы бот больше не ждал класс
+    await state.clear()
+
+    # Выполняем вашу логику
     schedule = await ScheduleService.get_tomorrow(class_num)
     class_data = await ClassService.get_class(class_num)
+
     if schedule:
+        # В зависимости от того, как работает get_class (возвращает список или 1 объект)
         for class_ in class_data:
             await SentMessage.msg_tomorrow(schedule, class_.chat_id)
+        await message.answer(f"✅ Уведомления 'Завтра' для {class_num} класса отправлены.")
     else:
-        await message.answer("Завтра нет перекусов")
+        await message.answer(f"Завтра нет перекусов для {class_num} класса.")
 
 
+# ==========================================
+# ЛОГИКА ДЛЯ /testweek
+# ==========================================
 @router.message(Command("testweek"))
-async def __week(message: Message, command: CommandObject):
+async def cmd_testweek_start(message: Message, state: FSMContext):
+    """Шаг 1: Получаем команду и просим номер класса"""
     if message.from_user.id != settings.telegram.admin_chat_id:
         return
-    class_num = command.args
-    if class_num is None:
-        await message.answer("Укажите номер класса через пробел")
-    if not class_num.isdigit():
-        await message.answer("Номер класса должен быть числом")
-    class_num = int(class_num)
+
+    await message.answer("Введите номер класса для недели (или /cancel для отмены):")
+    await state.set_state(ScheduleStates.waiting_for_week_class)
+
+
+@router.message(ScheduleStates.waiting_for_week_class)
+async def process_week_class(message: Message, state: FSMContext):
+    """Шаг 2: Ловим введенный текст и обрабатываем его"""
+    if not message.text.isdigit():
+        await message.answer("Пожалуйста, введите число или нажмите /cancel")
+        return
+
+    class_num = int(message.text)
+
+    # Очищаем состояние
+    await state.clear()
+
     days = 5 if class_num < 4 else 6
     schedules = await ScheduleService.get_week(class_num, days=days)
-    class_ = await ClassService.get_class(class_num)
-    if schedules and class_:
-        for c in class_:
-            await SentMessage.msg_week(schedules, c.chat_id)
+    class_data = await ClassService.get_class(class_num)
 
+    if schedules and class_data:
+        for c in class_data:
+            await SentMessage.msg_week(schedules, c.chat_id)
+        await message.answer(f"✅ Уведомления 'Неделя' для {class_num} класса отправлены.")
+    else:
+        await message.answer(f"Нет данных на неделю для {class_num} класса.")
 
 @router.message(Command("test"))
 async def __test(message: Message):
