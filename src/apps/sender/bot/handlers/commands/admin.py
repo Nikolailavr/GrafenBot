@@ -117,6 +117,7 @@ async def process_week_class(message: Message, state: FSMContext):
     days = 5 if class_num < 4 else 6
     schedules = await ScheduleService.get_week(class_num, days=days)
     class_data = await ClassService.get_class(class_num)
+    logger.info(class_data)
 
     if schedules and class_data:
         for c in class_data:
