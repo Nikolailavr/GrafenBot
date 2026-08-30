@@ -20,12 +20,9 @@ class ClassCRUD:
         await self.session.refresh(class_obj)
         return class_obj
 
-    async def get(self, num: int) -> Sequence[Class] | None:
+    async def get(self, num: int) -> Sequence[Class]:
         result = await self.session.execute(select(Class).where(Class.num == num))
-        class_obj = result.scalars().all()
-        if class_obj:
-            return class_obj
-        return None
+        return result.scalars().all()
 
     async def update(self, class_in: ClassCreate) -> Optional[ClassRead]:
         result = await self.session.execute(
