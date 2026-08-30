@@ -125,6 +125,7 @@ async def process_week_class(message: Message, state: FSMContext):
     else:
         await message.answer(f"Нет данных на неделю для {class_num} класса.")
 
+
 @router.message(Command("test"))
 async def __test(message: Message):
     if message.from_user.id != settings.telegram.admin_chat_id:
