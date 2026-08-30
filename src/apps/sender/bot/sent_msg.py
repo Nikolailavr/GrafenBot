@@ -31,7 +31,17 @@ def _convert_date(date: str, need_week: bool = False) -> str:
 def _choose_mess(schedule: ScheduleRead):
     text = schedule.child.lower()
 
-    # Если в строке ребёнка есть "пицца" или "пиццы"
+    # 1. Собираем список доступных юзернеймов (отбрасываем None и пустые строки)
+    usernames = []
+    if schedule.mother:
+        usernames.append(f"@{schedule.mother}")
+    if schedule.father:
+        usernames.append(f"@{schedule.father}")
+
+    # Текст-предупреждение, если контактов нет вообще
+    no_contacts_warning = "\n⚠️ У родителей не указан @username! Пожалуйста, передайте им информацию."
+
+    # 2. Формируем сообщение
     if "пицца" in text or "пиццы" in text:
         # День пиццы
         mess = (
@@ -39,10 +49,12 @@ def _choose_mess(schedule: ScheduleRead):
             "УРА! Завтра день ПИЦЦЫ!\n"
             "📲 Не забудьте заказать ПИЦЦУ\n"
         )
-        if schedule.mother:
-            mess += f"@{schedule.mother} "
-        if schedule.father:
-            mess += f"@{schedule.father}"
+        # Если есть хотя бы один юзернейм, добавляем их через пробел
+        if usernames:
+            mess += " ".join(usernames)
+        else:
+            mess += no_contacts_warning
+
     else:
         # Обычное сообщение про перекус
         mess = (
@@ -50,10 +62,13 @@ def _choose_mess(schedule: ScheduleRead):
             f"📅 Завтра в {_convert_date(schedule.date, need_week=True)}\n"
             "🥪 Перекус приносит:\n"
             f"👉 {schedule.child}\n"
-            f"📲 @{schedule.mother}"
         )
-        if schedule.father:
-            mess += f", @{schedule.father}"
+        # Если есть хотя бы один юзернейм, добавляем их через запятую
+        if usernames:
+            mess += f"📲 {', '.join(usernames)}"
+        else:
+            mess += no_contacts_warning
+
     return mess
 
 
