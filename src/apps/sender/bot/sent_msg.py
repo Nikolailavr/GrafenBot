@@ -1,11 +1,13 @@
 from datetime import datetime
+import logging
 
 from core.config import bot
 from core.database.schemas import ScheduleRead
 
+logger = logging.getLogger(__name__)
+
 date_format_db = "%Y-%m-%d"
 date_format = "%d-%m-%Y"
-
 
 WEEKDAYS_RU = [
     "понедельник", "вторник", "среду",
@@ -88,18 +90,25 @@ class SentMessage:
             for item in s:
                 mess += f"\n{_convert_date(item.date)} — {item.child}"
 
-        await bot.send_message(
-            chat_id=chat_id,
-            text=mess,
-        )
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=mess,
+            )
+        except Exception as e:
+            # Ошибка не прервет выполнение внешнего цикла рассылки по другим чатам
+            logger.error(f"Не удалось отправить сообщение недельного графика для чата {chat_id}: {e}")
 
     @staticmethod
     async def msg_schedule(schedules: dict, chat_id: int, first_name: str = ""):
         if not schedules:
-            await bot.send_message(
-                chat_id=chat_id,
-                text="Нет расписания.",
-            )
+            try:
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text="Нет расписания.",
+                )
+            except Exception as e:
+                logger.error(f"Не удалось отправить уведомление об отсутствии расписания для чата {chat_id}: {e}")
             return
 
         mess = f"Уважаемый {first_name}!\n📅 Ваш график на учебный год:"
@@ -109,15 +118,21 @@ class SentMessage:
             for item in schedule:
                 mess += f"\n{_convert_date(item.date)} — {item.child}"
 
-        await bot.send_message(
-            chat_id=chat_id,
-            text=mess,
-        )
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=mess,
+            )
+        except Exception as e:
+            logger.error(f"Не удалось отправить полный график для чата {chat_id}: {e}")
 
 
     @staticmethod
     async def msg_tomorrow(schedule: ScheduleRead, chat_id: int):
-        await bot.send_message(
-            chat_id=chat_id,
-            text=_choose_mess(schedule),
-        )
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=_choose_mess(schedule),
+            )
+        except Exception as e:
+            logger.error(f"Не удалось отправить напоминание на завтра для чата {chat_id}: {e}")
