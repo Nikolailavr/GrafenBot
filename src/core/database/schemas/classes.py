@@ -6,7 +6,7 @@ from core.database.schemas import FamilyRead
 
 class ClassBase(BaseModel):
     num: int
-    chat_id: Optional[int] = None
+    chat_id: int
 
 
 class ClassCreate(ClassBase): ...
