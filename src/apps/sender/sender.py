@@ -19,6 +19,10 @@ async def check_mess():
         classes = await ClassService.list_classes()
         for class_ in classes:
             await send_reminder_for_class(class_)
+        await bot.send_message(
+            chat_id=settings.telegram.admin_chat_id,
+            text=f'Все уведомления успешно отправлены',
+        )
     except Exception as ex:
         await bot.send_message(
             chat_id=settings.telegram.admin_chat_id,
